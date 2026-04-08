@@ -15,7 +15,7 @@
     "shell:allow-open",
     "http:default",
     {
-      "identifier": "http:request",
+      "identifier": "http:allow-request",
       "allow": [
         { "url": "https://docs.google.com/*" },
         { "url": "https://*.googleusercontent.com/*" },
