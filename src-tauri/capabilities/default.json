@@ -13,6 +13,14 @@
     "core:window:allow-minimize",
     "core:window:allow-center",
     "shell:default",
-    "http:default"
+    "http:default",
+    {
+      "identifier": "http:allow-request",
+      "allow": [
+        { "url": "https://docs.google.com/spreadsheets/d/e/*" },
+        { "url": "https://*.googleusercontent.com/*" },
+        { "url": "https://*.google.com/*" }
+      ]
+    }
   ]
 }
