@@ -42,36 +42,51 @@ export function useCsvData(): CsvDataResult {
     setError(null);
 
     try {
-      // TauriのHTTPプラグイン経由でフェッチ（CORSを回避）
+      // 1. そもそもURLが正しく渡されているか確認
+      if (!CSV_URL) {
+        throw new Error("CSV_URLが未定義です。lib/csvParserを確認してください。");
+      }
+
+      console.log("Fetching from:", CSV_URL);
+
+      // TauriのHTTPプラグイン経由でフェッチ
       const response = await fetch(CSV_URL, { 
         method: 'GET',
         signal: controller.signal,
-        // タイムアウト設定を追加（任意）
         connectTimeout: 30000 
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // HTTPエラー（404や403など）を具体的に投げる
+        throw new Error(`サーバ応答エラー: ${response.status} ${response.statusText}`);
       }
 
       const csvText = await response.text();
+
+      // 2. 取得した中身がHTML（スプレッドシートのログイン画面など）になっていないか
+      if (csvText.includes("<!DOCTYPE html>")) {
+        throw new Error("CSVではなくHTMLが返ってきました。スプレッドシートの『ウェブに公開』設定を再確認してください。");
+      }
+
       const parsed = parseCsv(csvText);
 
       if (parsed.length === 0) {
-        throw new Error('CSVデータが空です。データソースを確認してください。');
+        throw new Error('CSVデータが空です。');
       }
 
-      // キャッシュ更新
       dataCache = { slides: parsed, timestamp: Date.now() };
       setSlides(parsed);
       setError(null);
+
     } catch (err: any) {
-      // キャンセル時はエラーにしない
-      if (err.name === 'AbortError' || (err instanceof DOMException && err.name === 'AbortError')) return;
+      if (err.name === 'AbortError') return;
       
-      const message = err instanceof Error ? err.message : 'データ取得に失敗しました';
-      console.error('[useCsvData] Fetch error:', message);
-      setError(message);
+      // 💡 ここが重要！エラーの正体を具体的に画面に出します
+      const message = err instanceof Error ? err.message : String(err);
+      console.error('[useCsvData] Fetch error:', err);
+      
+      // 画面の「データ取得に失敗しました」を、具体的な理由に書き換える
+      setError(`取得失敗: ${message}`); 
     } finally {
       setIsLoading(false);
     }
