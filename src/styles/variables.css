@@ -1,0 +1,84 @@
+/* ===================================================
+   DeepSync Widget — Design Tokens & CSS Variables
+   Theme: Dark Cyberpunk / Minimalism
+   =================================================== */
+
+:root {
+  /* ── Base Colors ── */
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #111115;
+  --bg-tertiary: #18181e;
+  --bg-glass: rgba(10, 10, 12, 0.85);
+  --bg-glass-heavy: rgba(10, 10, 12, 0.92);
+
+  /* ── Accent: Focus Mode (Cyan) ── */
+  --cyan: #00f2ff;
+  --cyan-dim: #00a8b3;
+  --cyan-bg: rgba(0, 242, 255, 0.08);
+  --cyan-border: rgba(0, 242, 255, 0.2);
+  --cyan-glow: 0 0 20px rgba(0, 242, 255, 0.4);
+  --cyan-glow-intense: 0 0 40px rgba(0, 242, 255, 0.6), 0 0 80px rgba(0, 242, 255, 0.2);
+
+  /* ── Accent: Break Mode (Magenta) ── */
+  --magenta: #ff00ff;
+  --magenta-dim: #b300b3;
+  --magenta-bg: rgba(255, 0, 255, 0.08);
+  --magenta-border: rgba(255, 0, 255, 0.2);
+  --magenta-glow: 0 0 20px rgba(255, 0, 255, 0.4);
+  --magenta-glow-intense: 0 0 40px rgba(255, 0, 255, 0.6), 0 0 80px rgba(255, 0, 255, 0.2);
+
+  /* ── Text ── */
+  --text-primary: #e0e0e8;
+  --text-secondary: #7a7a8a;
+  --text-muted: #4a4a56;
+  --text-accent: var(--cyan);
+
+  /* ── Borders & Dividers ── */
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-medium: rgba(255, 255, 255, 0.12);
+  --border-accent: var(--cyan-border);
+
+  /* ── Typography ── */
+  --font-heading: 'Playfair Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Inter', -apple-system, sans-serif;
+
+  /* ── Sizing ── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ── Transitions ── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --duration-slide: 800ms;
+
+  /* ── Blur ── */
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 30px;
+  --blur-xl: 50px;
+
+  /* ── Dynamic (mode-switched) ── */
+  --accent: var(--cyan);
+  --accent-dim: var(--cyan-dim);
+  --accent-bg: var(--cyan-bg);
+  --accent-border: var(--cyan-border);
+  --accent-glow: var(--cyan-glow);
+  --accent-glow-intense: var(--cyan-glow-intense);
+}
+
+/* ── Break Mode Override ── */
+[data-mode="break"] {
+  --accent: var(--magenta);
+  --accent-dim: var(--magenta-dim);
+  --accent-bg: var(--magenta-bg);
+  --accent-border: var(--magenta-border);
+  --accent-glow: var(--magenta-glow);
+  --accent-glow-intense: var(--magenta-glow-intense);
+}

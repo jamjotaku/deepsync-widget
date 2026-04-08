@@ -1,0 +1,111 @@
+/* ===================================================
+   DeepSync Widget — Global Styles
+   =================================================== */
+
+@import './styles/variables.css';
+@import './styles/animations.css';
+
+/* ── Reset ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+}
+
+/* ── App Container ── */
+.app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* ── Scrollbar (settings drawer) ── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* ── Filter Chip Styles (shared) ── */
+.filter-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-chip {
+  cursor: pointer;
+}
+
+.filter-chip__input {
+  display: none;
+}
+
+.filter-chip__label {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast);
+  cursor: pointer;
+}
+
+.filter-chip__input:checked + .filter-chip__label {
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 6px var(--accent-bg);
+}
+
+.filter-chip__label:hover {
+  border-color: var(--accent-border);
+  color: var(--text-primary);
+}
+
+.filter-action-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.filter-action-btn:hover {
+  color: var(--accent);
+}

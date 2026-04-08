@@ -1,0 +1,122 @@
+/* ===================================================
+   DeepSync Widget — HUD Overlay Styles
+   =================================================== */
+
+.hud {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* ── Top Bar ── */
+.hud__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  pointer-events: auto;
+  opacity: 0.4;
+  transition: opacity var(--duration-normal) var(--ease-in-out);
+}
+
+.hud:hover .hud__top,
+.hud--settings-open .hud__top {
+  opacity: 1;
+}
+
+.hud__clock {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: 0.08em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.hud__top-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.hud__icon-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all var(--duration-fast);
+  padding: 0;
+  line-height: 1;
+}
+
+.hud__icon-btn:hover {
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: var(--accent-bg);
+  box-shadow: var(--accent-glow);
+}
+
+.hud__icon-btn--active {
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* ── Bottom Bar ── */
+.hud__bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 14px 14px;
+  pointer-events: auto;
+  opacity: 0.5;
+  transition: opacity var(--duration-normal) var(--ease-in-out);
+}
+
+.hud:hover .hud__bottom,
+.hud--settings-open .hud__bottom {
+  opacity: 1;
+}
+
+.hud__filter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hud__filter-tag {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hud__filter-tag-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.6;
+}
+
+/* ── Drag Region ── */
+.hud__drag-region {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  z-index: 100;
+  -webkit-app-region: drag;
+}

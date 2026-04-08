@@ -1,0 +1,158 @@
+/* ===================================================
+   DeepSync Widget — Animations
+   =================================================== */
+
+/* ── Slide Transitions ── */
+@keyframes slideFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* ── Ken Burns (Subtle zoom pan) ── */
+@keyframes kenBurns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.06) translate(-1%, -0.5%);
+  }
+  100% {
+    transform: scale(1.03) translate(0.5%, 0.3%);
+  }
+}
+
+/* ── Glow Pulse (Timer active state) ── */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: var(--accent-glow);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: var(--accent-glow-intense);
+    filter: brightness(1.15);
+  }
+}
+
+@keyframes textGlowPulse {
+  0%, 100% {
+    text-shadow: 0 0 8px var(--accent);
+    opacity: 1;
+  }
+  50% {
+    text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent);
+    opacity: 0.9;
+  }
+}
+
+/* ── Drawer Slide ── */
+@keyframes drawerSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+/* ── HUD Fade ── */
+@keyframes hudFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hudFadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-4px); }
+}
+
+/* ── Progress Ring ── */
+@keyframes ringProgress {
+  from {
+    stroke-dashoffset: var(--ring-circumference);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── Scan Line (cyberpunk decorative) ── */
+@keyframes scanLine {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+/* ── Shimmer Loading ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ── Utility Classes ── */
+.animate-slide-in {
+  animation: slideFadeIn var(--duration-slide) var(--ease-out-expo) forwards;
+}
+
+.animate-slide-out {
+  animation: slideFadeOut var(--duration-slide) var(--ease-out-expo) forwards;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-text-glow {
+  animation: textGlowPulse 2s ease-in-out infinite;
+}
+
+.animate-ken-burns {
+  animation: kenBurns 20s ease-in-out infinite alternate;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary) 25%,
+    var(--bg-secondary) 50%,
+    var(--bg-tertiary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
