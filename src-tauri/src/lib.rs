@@ -2,7 +2,7 @@
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri-plugin-http::init()) // この行を追加
+        .plugin(tauri_plugin_http::init()) // ← ここ！ハイフンではなくアンダースコア(_)に
         .setup(|app| {
             Ok(())
         })

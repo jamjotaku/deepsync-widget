@@ -10,12 +10,11 @@ name = "deepsync_widget_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = "2.0.0-rc"
+tauri-build = "2.0" # ← ここを 2.0 に
 
 [dependencies]
-tauri = { version = "2.0.0-rc", features = [] }
+tauri = { version = "2.0", features = [] } # ← ここを 2.0 に
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-# ここに以下を追加（または上書き）
-tauri-plugin-http = "2.0.0-rc"
-tauri-plugin-shell = "2.0.0-rc"
+tauri-plugin-http = "2.0" # ← ここを 2.0 に
+tauri-plugin-shell = "2.0" # ← ここを 2.0 に
