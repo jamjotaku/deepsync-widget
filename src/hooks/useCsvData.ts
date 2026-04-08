@@ -1,9 +1,10 @@
 // ===================================================
-// DeepSync Widget — CSV Data Hook
-// Google Sheets CSV からスライドデータを取得・管理
+// DeepSync Widget — CSV Data Hook (Tauri HTTP Plugin版)
 // ===================================================
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+// ブラウザ標準の fetch ではなく、Tauriプラグインの fetch を使用
+import { fetch } from '@tauri-apps/plugin-http'; 
 import { parseCsv, extractUniqueValues, CSV_URL } from '../lib/csvParser';
 import type { SlideData, CsvDataResult } from '../types';
 
@@ -15,7 +16,7 @@ interface CacheEntry {
   timestamp: number;
 }
 
-// モジュールレベルキャッシュ（コンポーネント再マウントを超えて維持）
+// モジュールレベルキャッシュ
 let dataCache: CacheEntry | null = null;
 
 export function useCsvData(): CsvDataResult {
@@ -25,7 +26,7 @@ export function useCsvData(): CsvDataResult {
   const abortRef = useRef<AbortController | null>(null);
 
   const fetchData = useCallback(async (forceRefresh = false) => {
-    // キャッシュが有効かチェック
+    // キャッシュチェック
     if (!forceRefresh && dataCache && Date.now() - dataCache.timestamp < CACHE_TTL_MS) {
       setSlides(dataCache.slides);
       setIsLoading(false);
@@ -41,7 +42,13 @@ export function useCsvData(): CsvDataResult {
     setError(null);
 
     try {
-      const response = await fetch(CSV_URL, { signal: controller.signal });
+      // TauriのHTTPプラグイン経由でフェッチ（CORSを回避）
+      const response = await fetch(CSV_URL, { 
+        method: 'GET',
+        signal: controller.signal,
+        // タイムアウト設定を追加（任意）
+        connectTimeout: 30000 
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -58,8 +65,10 @@ export function useCsvData(): CsvDataResult {
       dataCache = { slides: parsed, timestamp: Date.now() };
       setSlides(parsed);
       setError(null);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return;
+    } catch (err: any) {
+      // キャンセル時はエラーにしない
+      if (err.name === 'AbortError' || (err instanceof DOMException && err.name === 'AbortError')) return;
+      
       const message = err instanceof Error ? err.message : 'データ取得に失敗しました';
       console.error('[useCsvData] Fetch error:', message);
       setError(message);
@@ -71,7 +80,6 @@ export function useCsvData(): CsvDataResult {
   // 初回マウント時にデータ取得
   useEffect(() => {
     fetchData();
-
     return () => {
       abortRef.current?.abort();
     };

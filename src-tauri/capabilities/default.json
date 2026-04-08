@@ -12,15 +12,7 @@
     "core:window:allow-close",
     "core:window:allow-minimize",
     "core:window:allow-center",
-    "shell:allow-open",
-    "http:default",
-    {
-      "identifier": "http:allow-request",
-      "allow": [
-        { "url": "https://docs.google.com/*" },
-        { "url": "https://*.googleusercontent.com/*" },
-        { "url": "https://*.google.com/*" }
-      ]
-    }
+    "shell:default",
+    "http:default"
   ]
 }
