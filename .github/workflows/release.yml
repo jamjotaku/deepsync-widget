@@ -1,0 +1,47 @@
+name: "Release Build"
+
+on:
+  push:
+    tags:
+      - 'v*' # v1.0.0 のようにタグが打たれた時に自動起動
+
+jobs:
+  publish:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest] # Windows環境でビルド
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Node.js セットアップ
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      # 2. Rust セットアップ
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      # 3. 依存関係のインストール
+      - name: install dependencies
+        run: npm install
+
+      # 4. Tauri アプリのビルド & リリース作成
+      - name: build and release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__ # package.jsonのバージョンが自動で入ります
+          releaseName: "DeepSync Widget v__VERSION__"
+          releaseBody: "See the assets below to download the installer."
+          releaseDraft: true
+          prerelease: false
+          
