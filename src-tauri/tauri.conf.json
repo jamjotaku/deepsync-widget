@@ -13,12 +13,12 @@
     "windows": [
       {
         "title": "DeepSync Widget",
-        "width": 320,
-        "height": 480,
+        "width": 600,
+        "height": 400,
         "resizable": true,
         "fullscreen": false,
-        "transparent": false,   
-        "decorations": true    
+        "transparent": false, 
+        "decorations": true   
       }
     ],
     "security": {
