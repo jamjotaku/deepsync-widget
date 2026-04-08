@@ -4,7 +4,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         // 👇 この行を追加（「tauri-plugin-http」を有効にする）
         .plugin(tauri_plugin_http::init()) 
-        .setup(|app| {
+        .setup(|_app| {
             Ok(())
         })
         .run(tauri::generate_context!())
