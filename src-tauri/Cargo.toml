@@ -1,6 +1,6 @@
 [package]
 name = "deepsync-widget"
-version = "0.1.1" # 0.1.0 から 0.1.1 に上げてキャッシュを強制回避
+version = "0.1.2"
 edition = "2021"
 
 [lib]
@@ -8,11 +8,11 @@ name = "deepsync_widget_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = "2.0.3" # 最新の安定版に固定
+tauri-build = "2.0"
 
 [dependencies]
-tauri = { version = "2.1.1", features = [] }
+tauri = { version = "2.0", features = [] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tauri-plugin-http = "2.0.1" # 一旦 2.0.1 に戻して安定性を優先
-tauri-plugin-shell = "2.0.1"
+tauri-plugin-http = "2.0"
+tauri-plugin-shell = "2.0"
