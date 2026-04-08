@@ -1,4 +1,5 @@
 {
+  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "DeepSync Widget default capabilities",
   "windows": ["main"],
@@ -11,6 +12,15 @@
     "core:window:allow-close",
     "core:window:allow-minimize",
     "core:window:allow-center",
-    "shell:allow-open"
+    "shell:allow-open",
+    "http:default",
+    {
+      "identifier": "http:request",
+      "allow": [
+        { "url": "https://docs.google.com/*" },
+        { "url": "https://*.googleusercontent.com/*" },
+        { "url": "https://*.google.com/*" }
+      ]
+    }
   ]
 }
