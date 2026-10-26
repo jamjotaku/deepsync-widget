@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { FilterPanel } from './FilterPanel';
 import { setWidgetSize, setAlwaysOnTop, setWindowPositionPreset } from '../lib/windowManager';
+import { toggleFullscreen } from '../lib/wakeLock';
 import { getSupabaseConfig, setSupabaseConfig, cloudSync, isCloudSyncEnabled } from '../lib/supabase';
 import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
@@ -256,6 +257,31 @@ export function SettingsDrawer({
               <div className="settings-toggle__switch-knob" />
             </div>
           </div>
+
+          {/* Keep Awake Toggle (タブレット常時点灯) */}
+          <div
+            className="settings-toggle"
+            onClick={() => onSettingsChange({ keepAwake: !settings.keepAwake })}
+          >
+            <span className="settings-toggle__label">💡 画面常時点灯（スリープ防止）</span>
+            <div
+              className={`settings-toggle__switch ${
+                settings.keepAwake ? 'settings-toggle__switch--on' : ''
+              }`}
+            >
+              <div className="settings-toggle__switch-knob" />
+            </div>
+          </div>
+
+          {/* フルスクリーン切替（タブレット / 大画面用） */}
+          <button
+            className="settings-size-btn"
+            style={{ width: '100%', marginTop: '8px', padding: '6px' }}
+            onClick={() => toggleFullscreen()}
+            title="ブラウザUIを非表示にして全画面表示"
+          >
+            ⛶ 全画面フルスクリーン表示
+          </button>
         </div>
 
         {/* ── ポモドーロ設定 ── */}

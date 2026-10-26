@@ -120,6 +120,8 @@ export interface AppSettings {
   selectedLayers: string[];
   /** シャッフル再生 */
   shuffle: boolean;
+  /** 画面常時点灯（スリープ防止） */
+  keepAwake: boolean;
 }
 
 /** デフォルト設定 */
@@ -138,6 +140,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   selectedMembers: [],
   selectedLayers: [],
   shuffle: true,
+  keepAwake: true,
 };
 
 /** ポモドーロタイマー状態 */

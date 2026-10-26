@@ -18,6 +18,7 @@ import { useSlideshow } from './hooks/useSlideshow';
 import { usePomodoro } from './hooks/usePomodoro';
 import { useFeedReader } from './hooks/useFeedReader';
 import { useNotifications } from './hooks/useNotifications';
+import { useWakeLock } from './hooks/useWakeLock';
 import { DEFAULT_SETTINGS, WIDGET_SIZES } from './types';
 import type { AppSettings, DisplayMode, SlideData } from './types';
 import { setAlwaysOnTop, resizeWindow } from './lib/windowManager';
@@ -28,6 +29,9 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+
+  // ── 画面常時点灯（スリープ防止 / タブレット据え置き） ──
+  useWakeLock(settings.keepAwake);
 
   // ── 外部通知 & トースト ──
   const {
