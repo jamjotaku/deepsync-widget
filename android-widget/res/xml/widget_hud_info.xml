@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ===================================================
-     DeepSync HUD — Android AppWidget Provider Info
-     =================================================== -->
+<!-- DeepSync HUD — Standard Widget Info (3x2 / 4x2) -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
-    android:minHeight="80dp"
+    android:minWidth="140dp"
+    android:minHeight="70dp"
     android:targetCellWidth="3"
     android:targetCellHeight="2"
-    android:maxResizeWidth="500dp"
-    android:maxResizeHeight="400dp"
+    android:maxResizeWidth="600dp"
+    android:maxResizeHeight="600dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_hud_layout"

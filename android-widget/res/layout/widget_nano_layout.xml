@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ===================================================
+     DeepSync Nano Bar — Android Slim Widget (4x1 / 3x1 / 2x1)
+     横長スリムな極小サイバーパンクHUDバー
+     =================================================== -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="@drawable/widget_bg"
+    android:padding="6dp">
+
+    <!-- サムネイル -->
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="Thumbnail"
+        android:src="@mipmap/ic_launcher" />
+
+    <!-- リアルタイム時計 -->
+    <TextClock
+        android:id="@+id/widget_clock"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
+        android:format24Hour="HH:mm:ss"
+        android:format12Hour="HH:mm:ss"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:shadowColor="#00F2FF"
+        android:shadowRadius="6" />
+
+    <!-- ポモドーロタイマー -->
+    <TextView
+        android:id="@+id/widget_pomodoro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="25:00 [FOCUS]"
+        android:textColor="#00F2FF"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:paddingStart="8dp"
+        android:paddingEnd="6dp" />
+
+</LinearLayout>
