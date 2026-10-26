@@ -13,6 +13,7 @@
     "setup": "powershell -ExecutionPolicy Bypass -File ./scripts/setup.ps1"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-shell": "^2.2.0",
     "react": "^19.0.0",

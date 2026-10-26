@@ -15,6 +15,7 @@ import {
   importPlaylistBackup,
 } from '../lib/playlistStorage';
 import { fetchTweetMedia, extractTweetUrls } from '../lib/twitterExtractor';
+import { cloudSync, isCloudSyncEnabled } from '../lib/supabase';
 
 export function usePlaylists(initialActiveId: string | null = null) {
   const [playlists, setPlaylists] = useState<Playlist[]>(() => getStoredPlaylists());
@@ -40,6 +41,47 @@ export function usePlaylists(initialActiveId: string | null = null) {
     return currentItems.map(playlistItemToSlideData);
   }, [currentItems]);
 
+  // ── クラウド同期フェッチ ──
+  const syncWithCloud = useCallback(async () => {
+    if (!isCloudSyncEnabled()) return;
+    try {
+      const data = await cloudSync.fetchCloudData();
+      if (data) {
+        const { playlists: cloudPlaylists, items: cloudItems } = data;
+
+        // ローカルアイテムとマージ
+        const localItems = getStoredItems();
+        const existingIds = new Set(localItems.map((it) => it.id));
+        const newItems = cloudItems.filter((it) => !existingIds.has(it.id));
+        const mergedItems = [...newItems, ...localItems];
+
+        saveItems(mergedItems);
+        setItems(mergedItems);
+
+        // ローカルプレイリストとマージ
+        const localPls = getStoredPlaylists();
+        const existingPlIds = new Set(localPls.map((p) => p.id));
+        const newPls = cloudPlaylists.filter((p) => !existingPlIds.has(p.id));
+        const mergedPls = [...localPls, ...newPls];
+        savePlaylists(mergedPls);
+        setPlaylists(mergedPls);
+      }
+    } catch (err) {
+      console.warn('[usePlaylists] Cloud sync error:', err);
+    }
+  }, []);
+
+  // 初回マウント時 ＆ Realtime リスナー
+  useEffect(() => {
+    syncWithCloud();
+    const unsubscribe = cloudSync.subscribeToChanges(() => {
+      syncWithCloud();
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [syncWithCloud]);
+
   // 新規プレイリスト作成
   const createPlaylist = useCallback((name: string, description?: string) => {
     const trimmed = name.trim();
@@ -56,6 +98,12 @@ export function usePlaylists(initialActiveId: string | null = null) {
     const next = [...playlists, newPlaylist];
     savePlaylists(next);
     setPlaylists(next);
+
+    // クラウドへも非同期同期
+    if (isCloudSyncEnabled()) {
+      cloudSync.upsertPlaylist(newPlaylist).catch(() => {});
+    }
+
     return newPlaylist.id;
   }, [playlists]);
 
@@ -110,6 +158,13 @@ export function usePlaylists(initialActiveId: string | null = null) {
         saveItems(nextItems);
         setItems(nextItems);
         setPlaylists(getStoredPlaylists()); // カウント同期
+
+        // クラウドへ追加アイテムを同期
+        if (isCloudSyncEnabled()) {
+          for (const item of addedItems) {
+            cloudSync.addPlaylistItem(targetId, item).catch(() => {});
+          }
+        }
       }
 
       setIsProcessing(false);
@@ -129,6 +184,11 @@ export function usePlaylists(initialActiveId: string | null = null) {
     saveItems(next);
     setItems(next);
     setPlaylists(getStoredPlaylists());
+
+    // クラウド側からも削除
+    if (isCloudSyncEnabled()) {
+      cloudSync.deletePlaylistItem(itemId).catch(() => {});
+    }
   }, [items]);
 
   // 指定プレイリストの全アイテム削除

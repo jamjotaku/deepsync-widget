@@ -3,8 +3,10 @@
 // 下部からスライドアップする設定パネル
 // ===================================================
 
+import { useState } from 'react';
 import { FilterPanel } from './FilterPanel';
 import { setWidgetSize, setAlwaysOnTop, setWindowPositionPreset } from '../lib/windowManager';
+import { getSupabaseConfig, setSupabaseConfig, cloudSync, isCloudSyncEnabled } from '../lib/supabase';
 import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
 import type { FeedSourceConfig } from '../hooks/useFeedReader';
@@ -46,6 +48,27 @@ export function SettingsDrawer({
     const newValue = !settings.alwaysOnTop;
     onSettingsChange({ alwaysOnTop: newValue });
     await setAlwaysOnTop(newValue);
+  };
+
+  // Supabase 設定ステート
+  const [supabaseUrl, setSupabaseUrl] = useState(() => getSupabaseConfig().url);
+  const [supabaseKey, setSupabaseKey] = useState(() => getSupabaseConfig().anonKey);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
+  const [isTestingSync, setIsTestingSync] = useState(false);
+
+  const handleSaveSupabase = () => {
+    setSupabaseConfig(supabaseUrl, supabaseKey);
+    setSyncStatusMsg('接続設定を保存しました。');
+    setTimeout(() => setSyncStatusMsg(null), 3000);
+  };
+
+  const handleTestSupabase = async () => {
+    setSupabaseConfig(supabaseUrl, supabaseKey);
+    setIsTestingSync(true);
+    setSyncStatusMsg('クラウド疎通テスト中...');
+    const res = await cloudSync.testConnection();
+    setIsTestingSync(false);
+    setSyncStatusMsg(res.message);
   };
 
   const formatInterval = (seconds: number): string => {
@@ -380,6 +403,80 @@ export function SettingsDrawer({
             )}
           </div>
         )}
+
+        {/* ── クラウド同期 (Supabase) ── */}
+        <div className="settings-section">
+          <div className="settings-section__title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>☁️ クラウド同期 (マルチデバイス)</span>
+            <span style={{ fontSize: '9px', color: isCloudSyncEnabled() ? '#00f2ff' : '#708090' }}>
+              {isCloudSyncEnabled() ? '● ACTIVE' : '○ LOCAL ONLY'}
+            </span>
+          </div>
+
+          <p style={{ fontSize: '10px', color: '#8aa0b4', margin: '4px 0 8px', lineHeight: 1.4 }}>
+            Supabase を設定すると、PC・iPhone・Android・タブレット間でプレイリストや画像がリアルタイム同期されます。
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div>
+              <div style={{ fontSize: '9px', color: '#65859e', marginBottom: '2px' }}>PROJECT URL</div>
+              <input
+                type="text"
+                placeholder="https://your-project.supabase.co"
+                className="hud-input"
+                style={{ width: '100%', padding: '4px 6px', fontSize: '10px' }}
+                value={supabaseUrl}
+                onChange={(e) => setSupabaseUrl(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <div style={{ fontSize: '9px', color: '#65859e', marginBottom: '2px' }}>ANON / PUBLIC KEY</div>
+              <input
+                type="password"
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                className="hud-input"
+                style={{ width: '100%', padding: '4px 6px', fontSize: '10px' }}
+                value={supabaseKey}
+                onChange={(e) => setSupabaseKey(e.target.value)}
+              />
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+              <button
+                className="hud-btn hud-btn-accent"
+                style={{ flex: 1, padding: '4px 0', fontSize: '10px', justifyContent: 'center' }}
+                onClick={handleSaveSupabase}
+              >
+                💾 設定を保存
+              </button>
+              <button
+                className="hud-btn"
+                style={{ flex: 1, padding: '4px 0', fontSize: '10px', justifyContent: 'center' }}
+                onClick={handleTestSupabase}
+                disabled={isTestingSync}
+              >
+                {isTestingSync ? '⚡ 通信中...' : '⚡ 接続テスト'}
+              </button>
+            </div>
+
+            {syncStatusMsg && (
+              <div
+                style={{
+                  fontSize: '10px',
+                  padding: '4px 8px',
+                  borderRadius: '3px',
+                  marginTop: '4px',
+                  background: syncStatusMsg.includes('正常') ? 'rgba(0, 242, 255, 0.15)' : 'rgba(255, 0, 127, 0.15)',
+                  border: `1px solid ${syncStatusMsg.includes('正常') ? 'rgba(0, 242, 255, 0.4)' : 'rgba(255, 0, 127, 0.4)'}`,
+                  color: syncStatusMsg.includes('正常') ? '#00f2ff' : '#ff007f',
+                }}
+              >
+                {syncStatusMsg}
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* ── フィルタ ── */}
         <FilterPanel
