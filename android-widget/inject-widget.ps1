@@ -22,7 +22,7 @@ New-Item -ItemType Directory -Force -Path "$androidAppDir/res/drawable" | Out-Nu
 # アセットのコピー
 Copy-Item -Force "android-widget/res/layout/*.xml" "$androidAppDir/res/layout/"
 Copy-Item -Force "android-widget/res/xml/*.xml" "$androidAppDir/res/xml/"
-Copy-Item -Force "android-widget/res/drawable/*.xml" "$androidAppDir/res/drawable/"
+Copy-Item -Force "android-widget/res/drawable/*" "$androidAppDir/res/drawable/"
 
 # Kotlin ソースコードのコピー
 $packageDir = "$androidAppDir/java/com/deepsync/widget"
@@ -38,11 +38,11 @@ if (Test-Path $manifestFile) {
     $manifestContent = Get-Content $manifestFile -Raw
 
     if (-not ($manifestContent -match "android.permission.INTERNET")) {
-        $manifestContent = $manifestContent -replace '<manifest.*?>', "`$0`n    <uses-permission android:name=`"android.permission.INTERNET`" />"
+        $manifestContent = $manifestContent -replace '<application', "<uses-permission android:name=`"android.permission.INTERNET`" />`n    <application"
     }
 
     if (-not ($manifestContent -match "DeepSyncWidgetProvider")) {
-        $receiver1 = @"
+        $receivers = @"
         <receiver android:name=".DeepSyncWidgetProvider" android:exported="true" android:label="DeepSync HUD (3x2)">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -50,12 +50,7 @@ if (Test-Path $manifestFile) {
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hud_info" />
         </receiver>
-"@
-        $manifestContent = $manifestContent -replace '</application>', "$receiver1`n    </application>"
-    }
 
-    if (-not ($manifestContent -match "DeepSyncPhotoWidgetProvider")) {
-        $receiver2 = @"
         <receiver android:name=".DeepSyncPhotoWidgetProvider" android:exported="true" android:label="DeepSync Photo Frame (4x3)">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -63,12 +58,7 @@ if (Test-Path $manifestFile) {
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_photo_info" />
         </receiver>
-"@
-        $manifestContent = $manifestContent -replace '</application>', "$receiver2`n    </application>"
-    }
 
-    if (-not ($manifestContent -match "DeepSyncNanoWidgetProvider")) {
-        $receiver3 = @"
         <receiver android:name=".DeepSyncNanoWidgetProvider" android:exported="true" android:label="DeepSync Nano Bar (4x1)">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -77,7 +67,7 @@ if (Test-Path $manifestFile) {
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_nano_info" />
         </receiver>
 "@
-        $manifestContent = $manifestContent -replace '</application>', "$receiver3`n    </application>"
+        $manifestContent = $manifestContent -replace '</application>', "$receivers`n    </application>"
     }
 
     Set-Content -Path $manifestFile -Value $manifestContent

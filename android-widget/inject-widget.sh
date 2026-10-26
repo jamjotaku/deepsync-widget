@@ -22,7 +22,7 @@ mkdir -p "$ANDROID_APP_DIR/res/drawable"
 
 cp -f android-widget/res/layout/*.xml "$ANDROID_APP_DIR/res/layout/"
 cp -f android-widget/res/xml/*.xml "$ANDROID_APP_DIR/res/xml/"
-cp -f android-widget/res/drawable/*.xml "$ANDROID_APP_DIR/res/drawable/"
+cp -f android-widget/res/drawable/* "$ANDROID_APP_DIR/res/drawable/"
 
 # Kotlin ソースコードのコピー
 PACKAGE_DIR="$ANDROID_APP_DIR/java/com/deepsync/widget"
@@ -32,31 +32,49 @@ fi
 mkdir -p "$PACKAGE_DIR"
 cp -f android-widget/src/*.kt "$PACKAGE_DIR/"
 
-# AndroidManifest.xml の設定
+# AndroidManifest.xml の安全な書き換え (Python)
 MANIFEST_FILE="$ANDROID_APP_DIR/AndroidManifest.xml"
 if [ -f "$MANIFEST_FILE" ]; then
-    # INTERNET パーミッション
-    if ! grep -q "android.permission.INTERNET" "$MANIFEST_FILE"; then
-        sed -i 's|<manifest|<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />|g' "$MANIFEST_FILE"
-    fi
+    echo "[Widget Injector] Injecting receivers into AndroidManifest.xml safely with Python..."
+    python3 -c "
+with open('$MANIFEST_FILE', 'r') as f:
+    content = f.read()
 
-    # 1. DeepSyncWidgetProvider (標準 HUD 3x2)
-    if ! grep -q "DeepSyncWidgetProvider" "$MANIFEST_FILE"; then
-        RECEIVER_1='        <receiver android:name=".DeepSyncWidgetProvider" android:exported="true" android:label="DeepSync HUD (3x2)">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n                <action android:name="com.deepsync.widget.ACTION_NEXT_IMAGE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hud_info" />\n        </receiver>'
-        sed -i "s|</application>|$RECEIVER_1\n    </application>|g" "$MANIFEST_FILE"
-    fi
+receivers = '''
+        <receiver android:name=\".DeepSyncWidgetProvider\" android:exported=\"true\" android:label=\"DeepSync HUD (3x2)\">
+            <intent-filter>
+                <action android:name=\"android.appwidget.action.APPWIDGET_UPDATE\" />
+                <action android:name=\"com.deepsync.widget.ACTION_NEXT_IMAGE\" />
+            </intent-filter>
+            <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/widget_hud_info\" />
+        </receiver>
 
-    # 2. DeepSyncPhotoWidgetProvider (大画面 Photo Frame 4x3)
-    if ! grep -q "DeepSyncPhotoWidgetProvider" "$MANIFEST_FILE"; then
-        RECEIVER_2='        <receiver android:name=".DeepSyncPhotoWidgetProvider" android:exported="true" android:label="DeepSync Photo Frame (4x3)">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n                <action android:name="com.deepsync.widget.ACTION_NEXT_PHOTO" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_photo_info" />\n        </receiver>'
-        sed -i "s|</application>|$RECEIVER_2\n    </application>|g" "$MANIFEST_FILE"
-    fi
+        <receiver android:name=\".DeepSyncPhotoWidgetProvider\" android:exported=\"true\" android:label=\"DeepSync Photo Frame (4x3)\">
+            <intent-filter>
+                <action android:name=\"android.appwidget.action.APPWIDGET_UPDATE\" />
+                <action android:name=\"com.deepsync.widget.ACTION_NEXT_PHOTO\" />
+            </intent-filter>
+            <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/widget_photo_info\" />
+        </receiver>
 
-    # 3. DeepSyncNanoWidgetProvider (スリム Nano Bar 4x1)
-    if ! grep -q "DeepSyncNanoWidgetProvider" "$MANIFEST_FILE"; then
-        RECEIVER_3='        <receiver android:name=".DeepSyncNanoWidgetProvider" android:exported="true" android:label="DeepSync Nano Bar (4x1)">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n                <action android:name="com.deepsync.widget.ACTION_NEXT_NANO" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_nano_info" />\n        </receiver>'
-        sed -i "s|</application>|$RECEIVER_3\n    </application>|g" "$MANIFEST_FILE"
-    fi
+        <receiver android:name=\".DeepSyncNanoWidgetProvider\" android:exported=\"true\" android:label=\"DeepSync Nano Bar (4x1)\">
+            <intent-filter>
+                <action android:name=\"android.appwidget.action.APPWIDGET_UPDATE\" />
+                <action android:name=\"com.deepsync.widget.ACTION_NEXT_NANO\" />
+            </intent-filter>
+            <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/widget_nano_info\" />
+        </receiver>
+'''
+
+if 'DeepSyncWidgetProvider' not in content:
+    content = content.replace('</application>', receivers + '\n    </application>')
+
+if 'android.permission.INTERNET' not in content:
+    content = content.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\" />\n    <application')
+
+with open('$MANIFEST_FILE', 'w') as f:
+    f.write(content)
+"
 fi
 
 echo "[Widget Injector] All 3 Android Widgets injected successfully!"

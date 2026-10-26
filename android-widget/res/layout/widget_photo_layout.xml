@@ -7,7 +7,7 @@
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_bg"
+    android:background="#E60A0A0E"
     android:padding="6dp">
 
     <!-- 全面高解像度写真 -->
@@ -17,7 +17,7 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
         android:contentDescription="DeepSync Large Photo"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@drawable/slide_2" />
 
     <!-- 下部サイバーHUD情報オーバーレイ -->
     <LinearLayout

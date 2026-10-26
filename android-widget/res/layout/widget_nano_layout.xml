@@ -9,7 +9,7 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:background="@drawable/widget_bg"
+    android:background="#E60A0A0E"
     android:padding="6dp">
 
     <!-- サムネイル -->
@@ -19,7 +19,7 @@
         android:layout_height="44dp"
         android:scaleType="centerCrop"
         android:contentDescription="Thumbnail"
-        android:src="@mipmap/ic_launcher" />
+        android:src="@drawable/slide_1" />
 
     <!-- リアルタイム時計 -->
     <TextClock
