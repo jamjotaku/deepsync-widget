@@ -1,0 +1,296 @@
+/* ===================================================
+   Media Add Modal — Cyberpunk Modal Styling
+   =================================================== */
+
+.hud-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 6, 10, 0.82);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.hud-modal-container {
+  background: rgba(14, 18, 26, 0.96);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.15), inset 0 0 15px rgba(0, 242, 255, 0.05);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(18, 24, 34, 0.9);
+  border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+}
+
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #00f2ff;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: #8899aa;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: #ff007f;
+  background: rgba(255, 0, 127, 0.1);
+}
+
+/* タブ */
+.modal-tabs {
+  display: flex;
+  background: rgba(10, 12, 18, 0.8);
+  border-bottom: 1px solid rgba(0, 242, 255, 0.15);
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #7a8b9e;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #00f2ff;
+}
+
+.tab-btn.active {
+  color: #00f2ff;
+  border-bottom-color: #00f2ff;
+  background: rgba(0, 242, 255, 0.05);
+}
+
+/* 通知バー */
+.modal-notice {
+  margin: 10px 14px 0;
+  padding: 8px 12px;
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #b0f0ff;
+  line-height: 1.4;
+}
+
+/* ボディ */
+.modal-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8fa0b5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.label-hint {
+  font-size: 9px;
+  color: #607080;
+}
+
+.hud-input {
+  background: rgba(12, 16, 24, 0.9);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-radius: 4px;
+  color: #e0e8f0;
+  padding: 8px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.hud-input:focus {
+  border-color: #00f2ff;
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.4;
+}
+
+.api-badge-info {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  color: #65859e;
+  line-height: 1.4;
+  padding: 4px 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 2px solid #00f2ff;
+}
+
+.processing-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: rgba(0, 242, 255, 0.12);
+  border: 1px dashed rgba(0, 242, 255, 0.4);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #00f2ff;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 9px;
+  justify-content: center;
+  font-size: 12px;
+}
+
+/* プレイリスト管理タブ */
+.create-playlist-form {
+  display: flex;
+  gap: 8px;
+}
+
+.create-playlist-form .hud-input {
+  flex: 1;
+}
+
+.playlist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.playlist-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: rgba(20, 26, 38, 0.6);
+  border: 1px solid rgba(0, 242, 255, 0.15);
+  border-radius: 4px;
+}
+
+.pl-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pl-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d0e0f0;
+}
+
+.pl-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #657585;
+}
+
+.danger-btn {
+  border-color: rgba(255, 0, 127, 0.4);
+  color: #ff007f;
+}
+
+.danger-btn:hover {
+  background: rgba(255, 0, 127, 0.2);
+  border-color: #ff007f;
+}
+
+/* バックアップタブ */
+.backup-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.backup-card {
+  padding: 12px;
+  background: rgba(20, 26, 38, 0.5);
+  border: 1px solid rgba(0, 242, 255, 0.15);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.backup-card h4 {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #00f2ff;
+}
+
+.backup-card p {
+  margin: 0;
+  font-size: 10px;
+  color: #8899aa;
+  line-height: 1.4;
+}
+
+.file-upload-btn {
+  text-align: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}

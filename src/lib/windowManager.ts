@@ -10,6 +10,24 @@ import { WIDGET_SIZES } from '../types';
 const isTauri = () => typeof window !== 'undefined' && '__TAURI__' in window;
 
 /**
+ * 任意の幅・高さにリサイズ
+ */
+export async function resizeWindow(width: number, height: number): Promise<void> {
+  if (!isTauri()) {
+    console.log(`[WindowManager] resizeWindow: ${width}x${height} (browser mode — skipped)`);
+    return;
+  }
+
+  try {
+    const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+    const appWindow = getCurrentWindow();
+    await appWindow.setSize(new LogicalSize(width, height));
+  } catch (err) {
+    console.error('[WindowManager] Failed to resize window:', err);
+  }
+}
+
+/**
  * ウィンドウサイズをプリセットに変更
  */
 export async function setWidgetSize(size: WidgetSize): Promise<void> {

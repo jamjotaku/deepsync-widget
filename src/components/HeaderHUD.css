@@ -1,0 +1,222 @@
+/* ===================================================
+   Header HUD Styling — Cyberpunk Glassmorphism
+   =================================================== */
+
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 42px;
+  padding: 0 12px;
+  background: rgba(10, 10, 14, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 242, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  z-index: 100;
+  position: relative;
+}
+
+/* スキャンライン微細エフェクト */
+.hud-header::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #00f2ff, transparent);
+  opacity: 0.6;
+}
+
+/* 左側ブランド */
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: grab;
+}
+
+.brand-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 5px;
+  background: rgba(0, 242, 255, 0.15);
+  color: #00f2ff;
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  border-radius: 2px;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.6);
+}
+
+.brand-title {
+  font-family: 'JetBrains Mono', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #e0e5ea;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+  transition: all 0.3s ease;
+}
+
+.status-dot.mode-focus {
+  background-color: #00f2ff;
+  color: #00f2ff;
+}
+
+.status-dot.mode-break {
+  background-color: #ff007f;
+  color: #ff007f;
+}
+
+.status-dot.mode-idle {
+  background-color: #708090;
+  color: #708090;
+}
+
+/* 中央: プレイリスト選択 & 追加 */
+.header-playlist-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-select {
+  background: rgba(18, 22, 30, 0.85);
+  color: #b0c4de;
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-select:hover, .hud-select:focus {
+  border-color: #00f2ff;
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.3);
+  color: #fff;
+}
+
+.playlist-select {
+  max-width: 140px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(20, 25, 35, 0.85);
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 3px;
+  color: #c0d0e0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hud-btn-accent {
+  background: rgba(0, 242, 255, 0.12);
+  border-color: rgba(0, 242, 255, 0.5);
+  color: #00f2ff;
+}
+
+.hud-btn-accent:hover {
+  background: rgba(0, 242, 255, 0.25);
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+  color: #fff;
+}
+
+.btn-icon {
+  font-weight: bold;
+}
+
+/* 右側コントロール */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.mode-toggle-group {
+  display: flex;
+  background: rgba(14, 18, 26, 0.9);
+  border: 1px solid rgba(0, 242, 255, 0.25);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  padding: 3px 6px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(0, 242, 255, 0.15);
+  color: #7a8b9e;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-btn:last-child {
+  border-right: none;
+}
+
+.mode-btn:hover {
+  color: #00f2ff;
+  background: rgba(0, 242, 255, 0.08);
+}
+
+.mode-btn.active {
+  background: rgba(0, 242, 255, 0.22);
+  color: #00f2ff;
+  text-shadow: 0 0 6px rgba(0, 242, 255, 0.8);
+}
+
+.size-select {
+  padding: 3px 4px;
+  font-size: 10px;
+}
+
+.hud-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: rgba(18, 22, 30, 0.8);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-icon-btn:hover {
+  border-color: #00f2ff;
+  box-shadow: 0 0 8px rgba(0, 242, 255, 0.4);
+}
+
+.hud-icon-btn.pinned {
+  border-color: #00f2ff;
+  background: rgba(0, 242, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
+}
