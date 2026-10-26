@@ -6,8 +6,10 @@
 import type { WidgetSize } from '../types';
 import { WIDGET_SIZES } from '../types';
 
-// Tauri 環境かどうかの判定
-export const isTauri = () => typeof window !== 'undefined' && '__TAURI__' in window;
+// Tauri 環境かどうかの判定 (Tauri v2 / v1 両対応)
+export const isTauri = () =>
+  typeof window !== 'undefined' &&
+  ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
 
 /**
  * 任意の幅・高さにリサイズ
