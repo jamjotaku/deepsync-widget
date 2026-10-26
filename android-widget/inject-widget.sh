@@ -34,10 +34,15 @@ cp -f android-widget/src/DeepSyncWidgetProvider.kt "$PACKAGE_DIR/"
 # AndroidManifest.xml にウィジェットの receiver を追記（未登録の場合のみ）
 MANIFEST_FILE="$ANDROID_APP_DIR/AndroidManifest.xml"
 if [ -f "$MANIFEST_FILE" ]; then
+    # INTERNET パーミッションの確認と追加
+    if ! grep -q "android.permission.INTERNET" "$MANIFEST_FILE"; then
+        sed -i 's|<manifest|<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />|g' "$MANIFEST_FILE"
+    fi
+
     if ! grep -q "DeepSyncWidgetProvider" "$MANIFEST_FILE"; then
         echo "[Widget Injector] Registering DeepSyncWidgetProvider in AndroidManifest.xml..."
         # </application> の直前に receiver を挿入
-        RECEIVER_SNIPPET='        <receiver android:name=".DeepSyncWidgetProvider" android:exported="true">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hud_info" />\n        </receiver>\n    </application>'
+        RECEIVER_SNIPPET='        <receiver android:name=".DeepSyncWidgetProvider" android:exported="true">\n            <intent-filter>\n                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />\n                <action android:name="com.deepsync.widget.ACTION_NEXT_IMAGE" />\n            </intent-filter>\n            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hud_info" />\n        </receiver>\n    </application>'
         sed -i "s|</application>|$RECEIVER_SNIPPET|g" "$MANIFEST_FILE"
     fi
 fi

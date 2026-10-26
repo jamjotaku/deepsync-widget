@@ -33,20 +33,24 @@ Copy-Item -Force "android-widget/src/DeepSyncWidgetProvider.kt" "$packageDir/"
 $manifestFile = "$androidAppDir/AndroidManifest.xml"
 if (Test-Path $manifestFile) {
     $manifestContent = Get-Content $manifestFile -Raw
+    if (-not ($manifestContent -match "android.permission.INTERNET")) {
+        $manifestContent = $manifestContent -replace '<manifest.*?>', "`$0`n    <uses-permission android:name=`"android.permission.INTERNET`" />"
+    }
     if (-not ($manifestContent -match "DeepSyncWidgetProvider")) {
         Write-Host "[Widget Injector] Registering DeepSyncWidgetProvider in AndroidManifest.xml..."
         $receiverSnippet = @"
         <receiver android:name=".DeepSyncWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.deepsync.widget.ACTION_NEXT_IMAGE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hud_info" />
         </receiver>
     </application>
 "@
         $manifestContent = $manifestContent -replace '</application>', $receiverSnippet
-        Set-Content -Path $manifestFile -Value $manifestContent
     }
+    Set-Content -Path $manifestFile -Value $manifestContent
 }
 
 Write-Host "[Widget Injector] Android Widget injected successfully!"
