@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [react()],
+  base: './',
 
   // Tauri が localhost を使うための設定
   clearScreen: false,
