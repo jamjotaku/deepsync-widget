@@ -179,6 +179,8 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .mode-toggle-group {
@@ -187,6 +189,7 @@
   border: 1px solid rgba(0, 242, 255, 0.25);
   border-radius: 3px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .mode-btn {
@@ -200,6 +203,7 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .mode-btn:last-child {
@@ -220,6 +224,7 @@
 .size-select {
   padding: 3px 4px;
   font-size: 10px;
+  flex-shrink: 0;
 }
 
 .hud-icon-btn {
@@ -234,6 +239,7 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .hud-icon-btn:hover {
@@ -245,4 +251,59 @@
   border-color: #00f2ff;
   background: rgba(0, 242, 255, 0.2);
   box-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
+}
+
+/* ===================================================
+   Container Queries — ウィジェット幅に応じた動的レイアウト最適化
+   =================================================== */
+
+/* 580px未満（大・中・小ウィジェット対応） */
+@container (max-width: 580px) {
+  .size-select {
+    display: none; /* サイズ変更は⚙️設定ドロワーに集約 */
+  }
+}
+
+/* 460px未満（中サイズ 360px、小サイズ 280px 対応） */
+@container (max-width: 460px) {
+  .brand-title {
+    display: none; /* 「DEEPSYNC」文字を省き「HUD」バッジのみに */
+  }
+  .clock-date {
+    display: none; /* 日付を省き「21:38:50」時刻のみに */
+  }
+  .add-btn .btn-label {
+    display: none; /* 「X登録」文字を省き「＋」アイコンのみに */
+  }
+  .add-btn {
+    padding: 3px 7px;
+  }
+  .playlist-select {
+    max-width: 95px;
+    font-size: 10px;
+    padding: 2px 4px;
+  }
+}
+
+/* 330px未満（極小ウィジェット対応） */
+@container (max-width: 330px) {
+  .hud-header {
+    padding: 0 6px;
+    gap: 4px;
+  }
+  .mode-btn {
+    padding: 2px 3px;
+    font-size: 8px;
+  }
+  .clock-time {
+    font-size: 10px;
+  }
+  .playlist-select {
+    max-width: 70px;
+  }
+  .hud-icon-btn {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
 }

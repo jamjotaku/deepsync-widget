@@ -71,6 +71,7 @@ html, body, #root {
   border: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
+  container-type: inline-size;
 }
 
 /* ── Scrollbar (settings drawer) ── */

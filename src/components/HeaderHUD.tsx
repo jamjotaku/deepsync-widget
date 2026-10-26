@@ -114,7 +114,7 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
           onClick={onOpenAddModal}
           title="X (Twitter) ポストから画像を追加"
         >
-          <span className="btn-icon">＋</span> X登録
+          <span className="btn-icon">＋</span><span className="btn-label"> X登録</span>
         </button>
       </div>
 
