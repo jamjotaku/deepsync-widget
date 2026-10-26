@@ -13,11 +13,13 @@ if (-not (Test-Path $androidAppDir)) {
 
 Write-Host "[Widget Injector] Injecting Android Widget assets..."
 
-# レイアウトとXMLのコピー
+# レイアウト、ドローアブル、XMLのコピー
 New-Item -ItemType Directory -Force -Path "$androidAppDir/res/layout" | Out-Null
 New-Item -ItemType Directory -Force -Path "$androidAppDir/res/xml" | Out-Null
+New-Item -ItemType Directory -Force -Path "$androidAppDir/res/drawable" | Out-Null
 Copy-Item -Force "android-widget/res/layout/widget_hud_layout.xml" "$androidAppDir/res/layout/"
 Copy-Item -Force "android-widget/res/xml/widget_hud_info.xml" "$androidAppDir/res/xml/"
+Copy-Item -Force "android-widget/res/drawable/widget_bg.xml" "$androidAppDir/res/drawable/"
 
 # Kotlin ソースコードのコピー
 $packageDir = "$androidAppDir/java/com/deepsync/widget"

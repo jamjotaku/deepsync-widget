@@ -15,11 +15,13 @@ fi
 
 echo "[Widget Injector] Injecting Android Widget assets..."
 
-# レイアウトとXML設定のコピー
+# レイアウト、ドローアブル、XML設定のコピー
 mkdir -p "$ANDROID_APP_DIR/res/layout"
 mkdir -p "$ANDROID_APP_DIR/res/xml"
+mkdir -p "$ANDROID_APP_DIR/res/drawable"
 cp -f android-widget/res/layout/widget_hud_layout.xml "$ANDROID_APP_DIR/res/layout/"
 cp -f android-widget/res/xml/widget_hud_info.xml "$ANDROID_APP_DIR/res/xml/"
+cp -f android-widget/res/drawable/widget_bg.xml "$ANDROID_APP_DIR/res/drawable/"
 
 # Kotlin ソースコードのコピー
 PACKAGE_DIR="$ANDROID_APP_DIR/java/com/deepsync/widget"
