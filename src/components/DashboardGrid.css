@@ -4,9 +4,12 @@
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 10px;
   padding: 10px;
+  padding-bottom: max(10px, calc(10px + var(--safe-bottom)));
+  padding-left: max(10px, calc(6px + var(--safe-left)));
+  padding-right: max(10px, calc(6px + var(--safe-right)));
   flex: 1;
   overflow-y: auto;
   align-content: start;
@@ -475,4 +478,46 @@
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
+}
+
+/* ===================================================
+   Responsive Layouts — Tablet / Mobile Adaptations
+   =================================================== */
+
+/* タブレット横画面・スマートディスプレイモード (iPad / Android Tablet 横向き) */
+@media screen and (min-width: 768px) and (orientation: landscape), (min-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: 1.25fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 14px;
+    padding: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .media-card {
+    grid-row: span 2;
+  }
+
+  .media-preview-container {
+    min-height: 380px;
+  }
+}
+
+/* スマホ縦持ちモード (iPhone / Android) */
+@media screen and (max-width: 599px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .media-preview-container {
+    min-height: 220px;
+  }
+
+  /* 指でのタップ領域を快適なサイズに確保 */
+  .hud-btn, .timer-ctrl-btn, .media-ctrl-btn {
+    min-height: 36px;
+  }
 }

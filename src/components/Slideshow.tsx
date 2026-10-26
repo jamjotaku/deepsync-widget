@@ -2,7 +2,7 @@
 // DeepSync Widget — Slideshow Component
 // ===================================================
 
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { openExternalUrl } from '../lib/windowManager';
 import type { SlideData } from '../types';
 import '../styles/slideshow.css';
@@ -37,6 +37,31 @@ export function Slideshow({
       openExternalUrl(currentSlide.sourceLink);
     }
   }, [currentSlide]);
+
+  // スマホ / タブレット用 スワイプジェスチャー検出
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      if (deltaX < 0) {
+        onNext(); // 左スワイプで次の画像
+      } else {
+        onPrev(); // 右スワイプで前の画像
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
 
   // ── Loading State ──
   if (isLoading) {
@@ -83,7 +108,11 @@ export function Slideshow({
 
   // ── Active Slideshow ──
   return (
-    <div className="slideshow">
+    <div
+      className="slideshow"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Gradient Overlays */}
       <div className="slideshow__gradient-top" />
       <div className="slideshow__gradient-bottom" />

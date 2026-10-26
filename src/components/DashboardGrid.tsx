@@ -3,7 +3,7 @@
 // 4モジュール (メディア / フィード / 通知 / タイマー) を統合したサイバーパンクHUD
 // ===================================================
 
-import React from 'react';
+import React, { useRef } from 'react';
 import type { FeedItem, NotificationItem, SlideData } from '../types';
 import { useClock } from '../hooks/useClock';
 import './DashboardGrid.css';
@@ -65,6 +65,32 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
 }) => {
   const clock = useClock();
 
+  // スマホ / タブレット用 スワイプジェスチャー検出
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartXRef.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartYRef.current;
+
+    // 水平方向のスワイプが垂直スクロールよりも明確な場合のみ画像送り
+    if (Math.abs(deltaX) > 40 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+      if (deltaX < 0) {
+        onNextSlide(); // 左スワイプで次の画像
+      } else {
+        onPrevSlide(); // 右スワイプで前の画像
+      }
+    }
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
+  };
+
   return (
     <div className="dashboard-grid">
       {/* ── 1. メディア・スライドショー パネル ── */}
@@ -76,7 +102,11 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
           </span>
         </div>
 
-        <div className="media-preview-container">
+        <div
+          className="media-preview-container"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {currentSlide ? (
             <>
               <img

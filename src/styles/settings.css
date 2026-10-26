@@ -45,7 +45,7 @@
 
 /* ── Content ── */
 .settings-drawer__content {
-  padding: 8px 16px 20px;
+  padding: 8px 16px max(20px, calc(16px + var(--safe-bottom)));
   display: flex;
   flex-direction: column;
   gap: 16px;

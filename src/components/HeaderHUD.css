@@ -7,8 +7,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 42px;
-  padding: 0 12px;
+  min-height: 42px;
+  height: calc(42px + var(--safe-top));
+  padding-top: var(--safe-top);
+  padding-left: max(12px, var(--safe-left));
+  padding-right: max(12px, var(--safe-right));
   background: rgba(10, 10, 14, 0.88);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(0, 242, 255, 0.25);
