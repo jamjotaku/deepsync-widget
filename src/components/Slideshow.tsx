@@ -17,6 +17,7 @@ interface SlideshowProps {
   onRetry: () => void;
   onNext: () => void;
   onPrev: () => void;
+  onImageError?: (url: string) => void;
 }
 
 export function Slideshow({
@@ -29,6 +30,7 @@ export function Slideshow({
   onRetry,
   onNext,
   onPrev,
+  onImageError,
 }: SlideshowProps) {
   const handleImageClick = useCallback(() => {
     if (currentSlide?.sourceLink) {
@@ -98,6 +100,14 @@ export function Slideshow({
           src={currentSlide.imageUrl}
           alt={`${currentSlide.character} by ${currentSlide.displayName}`}
           draggable={false}
+          referrerPolicy="no-referrer"
+          onError={() => {
+            if (onImageError) {
+              onImageError(currentSlide.imageUrl);
+            } else {
+              onNext();
+            }
+          }}
         />
       </div>
 

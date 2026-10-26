@@ -263,6 +263,7 @@ export default function App() {
               isSlidePaused={slideshow.isPaused}
               onToggleSlidePause={slideshow.togglePause}
               onDeleteCurrentSlide={handleDeleteCurrentSlide}
+              onImageError={slideshow.handleImageError}
               pomodoroMode={pomodoro.mode}
               timeDisplay={pomodoro.timeDisplay}
               progress={pomodoro.progress}
@@ -294,6 +295,7 @@ export default function App() {
                 onRetry={refetchCsv}
                 onNext={slideshow.next}
                 onPrev={slideshow.prev}
+                onImageError={slideshow.handleImageError}
               />
               <HUDOverlay
                 settings={settings}

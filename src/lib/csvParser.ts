@@ -100,15 +100,25 @@ export function parseCsv(csvText: string): SlideData[] {
     return [];
   }
 
+  // X側で削除・非公開化された古いポストの行インデックス (404対策)
+  const KNOWN_404_INDICES = new Set([
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 20, 21, 22, 23, 24,
+    25, 26, 27, 28, 29, 30, 31, 34, 36, 37, 43, 44, 46, 47, 48, 53, 55, 56,
+    57, 71, 72, 81, 94, 102, 108, 118, 119, 120, 139, 175,
+  ]);
+
   // データ行をパース
   const slides: SlideData[] = [];
 
   for (let i = 1; i < lines.length; i++) {
+    // リンク切れ行はスキップ
+    if (KNOWN_404_INDICES.has(i)) continue;
+
     const fields = parseCsvLine(lines[i]);
 
     const imageUrl = (columnIndices.imageUrl !== undefined ? fields[columnIndices.imageUrl] : '') ?? '';
-    // 画像URLが有効でない行はスキップ
-    if (!imageUrl || !imageUrl.startsWith('http')) continue;
+    // 画像URLが有効でない行はスキップ (pbs.twimg.com 以外のポストURL等は除外)
+    if (!imageUrl || !imageUrl.startsWith('http') || imageUrl.includes('x.com/')) continue;
 
     const date = (columnIndices.date !== undefined ? fields[columnIndices.date] : '') ?? '';
     const character = (columnIndices.character !== undefined ? fields[columnIndices.character] : '') ?? 'Unknown';

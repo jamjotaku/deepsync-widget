@@ -36,7 +36,12 @@ export const NanoHUD: React.FC<NanoHUDProps> = ({
       {/* サムネイル */}
       <div className="nano-thumb" onClick={onNextSlide} title="クリックで次の画像へ">
         {currentSlide ? (
-          <img src={currentSlide.imageUrl} alt="" className="thumb-img" />
+          <img
+            src={currentSlide.imageUrl}
+            alt=""
+            className="thumb-img"
+            referrerPolicy="no-referrer"
+          />
         ) : (
           <div className="thumb-placeholder">🌌</div>
         )}

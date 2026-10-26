@@ -17,6 +17,7 @@ interface DashboardGridProps {
   isSlidePaused: boolean;
   onToggleSlidePause: () => void;
   onDeleteCurrentSlide?: () => void;
+  onImageError?: (failedUrl: string) => void;
   // ポモドーロ関連
   pomodoroMode: string;
   timeDisplay: string;
@@ -45,6 +46,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
   isSlidePaused,
   onToggleSlidePause,
   onDeleteCurrentSlide,
+  onImageError,
   pomodoroMode,
   timeDisplay,
   progress,
@@ -81,11 +83,24 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                 src={currentSlide.imageUrl}
                 alt={currentSlide.displayName || 'Media'}
                 className="media-img"
+                referrerPolicy="no-referrer"
+                onError={() => {
+                  if (onImageError) {
+                    onImageError(currentSlide.imageUrl);
+                  } else {
+                    onNextSlide();
+                  }
+                }}
               />
               <div className="media-overlay-meta">
                 <div className="media-author">
                   {currentSlide.avatarUrl && (
-                    <img src={currentSlide.avatarUrl} alt="" className="author-avatar" />
+                    <img
+                      src={currentSlide.avatarUrl}
+                      alt=""
+                      className="author-avatar"
+                      referrerPolicy="no-referrer"
+                    />
                   )}
                   <span className="author-name">{currentSlide.character}</span>
                   <span className="author-handle">{currentSlide.displayName}</span>
