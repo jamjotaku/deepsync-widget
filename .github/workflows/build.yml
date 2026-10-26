@@ -119,14 +119,23 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android NDK
+      - name: Configure Android SDK & NDK
         run: |
-          sdkmanager --install "ndk;26.1.10909125"
-          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
-          echo "NDK_HOME=$ANDROID_HOME/ndk/26.1.10909125" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+
+          # NDK ディレクトリの確認と最新バージョンの自動バインド
+          if [ -d "$ANDROID_SDK_ROOT/ndk" ] && [ "$(ls -A $ANDROID_SDK_ROOT/ndk)" ]; then
+            NDK_VER=$(ls -1 "$ANDROID_SDK_ROOT/ndk" | sort -V | tail -n 1)
+            echo "Using installed NDK: $NDK_VER"
+            echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VER" >> $GITHUB_ENV
+            echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/$NDK_VER" >> $GITHUB_ENV
+          else
+            echo "Installing NDK 26.1 via sdkmanager..."
+            yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --install "ndk;26.1.10909125"
+            echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+            echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -144,8 +153,10 @@ jobs:
         with:
           workspaces: 'src-tauri -> target'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies & Build Frontend
+        run: |
+          npm ci
+          npm run build
 
       - name: Initialize Tauri Android & Inject Home Screen Widget
         run: |
@@ -153,8 +164,8 @@ jobs:
           chmod +x android-widget/inject-widget.sh
           ./android-widget/inject-widget.sh
 
-      - name: Build Android APK (Release)
-        run: npx tauri android build --apk --target aarch64
+      - name: Build Android APK
+        run: npx tauri android build --apk --debug --target aarch64
 
       - name: Upload Android APK Artifacts
         uses: actions/upload-artifact@v4
