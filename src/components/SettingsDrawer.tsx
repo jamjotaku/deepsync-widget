@@ -4,7 +4,7 @@
 // ===================================================
 
 import { FilterPanel } from './FilterPanel';
-import { setWidgetSize, setAlwaysOnTop } from '../lib/windowManager';
+import { setWidgetSize, setAlwaysOnTop, setWindowPositionPreset } from '../lib/windowManager';
 import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
 import type { FeedSourceConfig } from '../hooks/useFeedReader';
@@ -153,6 +153,49 @@ export function SettingsDrawer({
               );
             })}
           </div>
+        </div>
+
+        {/* ── デスクトップ配置スナップ ── */}
+        <div className="settings-section">
+          <div className="settings-section__title">デスクトップ配置（スナップ移動）</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px', marginTop: '6px' }}>
+            <button
+              className="settings-size-btn"
+              onClick={() => setWindowPositionPreset('top-left')}
+              title="画面左上にピタッと配置"
+            >
+              ↖ 画面左上
+            </button>
+            <button
+              className="settings-size-btn"
+              onClick={() => setWindowPositionPreset('top-right')}
+              title="画面右上にピタッと配置"
+            >
+              ↗ 画面右上
+            </button>
+            <button
+              className="settings-size-btn"
+              onClick={() => setWindowPositionPreset('bottom-left')}
+              title="画面左下にピタッと配置"
+            >
+              ↙ 画面左下
+            </button>
+            <button
+              className="settings-size-btn"
+              onClick={() => setWindowPositionPreset('bottom-right')}
+              title="画面右下にピタッと配置"
+            >
+              ↘ 画面右下
+            </button>
+          </div>
+          <button
+            className="settings-size-btn"
+            style={{ width: '100%', marginTop: '6px' }}
+            onClick={() => setWindowPositionPreset('center')}
+            title="画面中央に配置"
+          >
+            ⦿ 画面中央
+          </button>
         </div>
 
         {/* ── スライド間隔 ── */}

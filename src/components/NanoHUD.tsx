@@ -6,6 +6,7 @@
 import React from 'react';
 import type { SlideData } from '../types';
 import { useClock } from '../hooks/useClock';
+import { startDragging } from '../lib/windowManager';
 import './NanoHUD.css';
 
 interface NanoHUDProps {
@@ -32,7 +33,15 @@ export const NanoHUD: React.FC<NanoHUDProps> = ({
   const clock = useClock();
 
   return (
-    <div className="nano-hud-bar" data-tauri-drag-region>
+    <div
+      className="nano-hud-bar"
+      data-tauri-drag-region
+      onMouseDown={(e) => {
+        if (e.button === 0 && !(e.target as HTMLElement).closest('button, .nano-thumb, .nano-timer')) {
+          startDragging();
+        }
+      }}
+    >
       {/* サムネイル */}
       <div className="nano-thumb" onClick={onNextSlide} title="クリックで次の画像へ">
         {currentSlide ? (

@@ -68,6 +68,78 @@ export async function setAlwaysOnTop(enabled: boolean): Promise<void> {
 }
 
 /**
+ * ドラッグ移動を開始 (マウス押し下げ時)
+ */
+export async function startDragging(): Promise<void> {
+  if (!isTauri()) return;
+  try {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    const appWindow = getCurrentWindow();
+    await appWindow.startDragging();
+  } catch (err) {
+    console.error('[WindowManager] Failed to start dragging:', err);
+  }
+}
+
+/**
+ * デスクトップ上の位置プリセット（画面右下・右上・左上・中央など）へ移動
+ */
+export type WindowPositionPreset = 'top-right' | 'bottom-right' | 'top-left' | 'bottom-left' | 'center';
+
+export async function setWindowPositionPreset(preset: WindowPositionPreset): Promise<void> {
+  if (!isTauri()) {
+    console.log(`[WindowManager] setPositionPreset: ${preset} (browser mode)`);
+    return;
+  }
+
+  try {
+    const { getCurrentWindow, LogicalPosition, currentMonitor } = await import('@tauri-apps/api/window');
+    const appWindow = getCurrentWindow();
+    const monitor = await currentMonitor();
+    if (!monitor) return;
+
+    const scale = monitor.scaleFactor || 1;
+    const screenWidth = monitor.size.width / scale;
+    const screenHeight = monitor.size.height / scale;
+    const currentSize = await appWindow.outerSize();
+    const winWidth = currentSize.width / scale;
+    const winHeight = currentSize.height / scale;
+
+    const margin = 24;
+    let x = margin;
+    let y = margin;
+
+    switch (preset) {
+      case 'top-right':
+        x = Math.max(margin, screenWidth - winWidth - margin);
+        y = margin;
+        break;
+      case 'bottom-right':
+        x = Math.max(margin, screenWidth - winWidth - margin);
+        y = Math.max(margin, screenHeight - winHeight - margin - 48); // タスクバー余白
+        break;
+      case 'top-left':
+        x = margin;
+        y = margin;
+        break;
+      case 'bottom-left':
+        x = margin;
+        y = Math.max(margin, screenHeight - winHeight - margin - 48);
+        break;
+      case 'center':
+        x = Math.max(0, (screenWidth - winWidth) / 2);
+        y = Math.max(0, (screenHeight - winHeight) / 2);
+        break;
+    }
+
+    await appWindow.setPosition(new LogicalPosition(Math.round(x), Math.round(y)));
+    console.log(`[WindowManager] Position set to ${preset} (${x}, ${y})`);
+  } catch (err) {
+    console.error('[WindowManager] Failed to set window position:', err);
+  }
+}
+
+/**
  * 外部URLをデフォルトブラウザで開く
  */
 export async function openExternalUrl(url: string): Promise<void> {

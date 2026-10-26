@@ -7,6 +7,7 @@ import React from 'react';
 import type { DisplayMode, Playlist, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
 import { useClock } from '../hooks/useClock';
+import { startDragging } from '../lib/windowManager';
 import './HeaderHUD.css';
 
 interface HeaderHUDProps {
@@ -73,7 +74,15 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   };
 
   return (
-    <header className="hud-header" data-tauri-drag-region>
+    <header
+      className="hud-header"
+      data-tauri-drag-region
+      onMouseDown={(e) => {
+        if (e.button === 0 && !(e.target as HTMLElement).closest('button, select, input, a')) {
+          startDragging();
+        }
+      }}
+    >
       {/* 左側: システム識別 & リアルタイム時計 */}
       <div className="header-brand" data-tauri-drag-region>
         <span className="brand-badge">HUD</span>

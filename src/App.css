@@ -26,6 +26,26 @@ html, body, #root {
   user-select: none;
 }
 
+/* ── ウィンドウドラッグ設定 (Tauri / OSネイティブ) ── */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  cursor: grab;
+}
+
+[data-tauri-drag-region]:active {
+  cursor: grabbing;
+}
+
+button,
+select,
+input,
+textarea,
+a,
+.no-drag,
+[data-tauri-no-drag] {
+  -webkit-app-region: no-drag;
+}
+
 /* ── App Container ── */
 .app {
   position: relative;
