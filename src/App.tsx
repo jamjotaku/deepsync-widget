@@ -190,6 +190,18 @@ export default function App() {
     );
   }, [addNotification]);
 
+  // ESCキーで設定ドロワーやモーダルを閉じる
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isMediaModalOpen) setIsMediaModalOpen(false);
+        else if (isSettingsOpen) setIsSettingsOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMediaModalOpen, isSettingsOpen]);
+
   const activeFilterCount =
     settings.selectedMembers.length + settings.selectedLayers.length;
   const dataMode = pomodoro.mode === 'break' ? 'break' : 'focus';
@@ -218,7 +230,8 @@ export default function App() {
             activePlaylistId={activePlaylistId}
             onPlaylistChange={setActivePlaylistId}
             onOpenAddModal={() => setIsMediaModalOpen(true)}
-            onOpenSettings={() => setIsSettingsOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen((prev) => !prev)}
+            isSettingsOpen={isSettingsOpen}
             widgetSize={settings.widgetSize}
             onSizeChange={(size) => updateSettings({ widgetSize: size })}
             isAlwaysOnTop={settings.alwaysOnTop}
@@ -307,6 +320,7 @@ export default function App() {
           {/* ── 設定ドロワー ── */}
           <SettingsDrawer
             isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
             settings={settings}
             onSettingsChange={updateSettings}
             availableMembers={uniqueMembers}

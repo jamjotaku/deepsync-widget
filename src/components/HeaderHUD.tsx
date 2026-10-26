@@ -16,6 +16,7 @@ interface HeaderHUDProps {
   onPlaylistChange: (id: string | null) => void;
   onOpenAddModal: () => void;
   onOpenSettings: () => void;
+  isSettingsOpen?: boolean;
   widgetSize: WidgetSize;
   onSizeChange: (size: WidgetSize) => void;
   isAlwaysOnTop: boolean;
@@ -31,6 +32,7 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   onPlaylistChange,
   onOpenAddModal,
   onOpenSettings,
+  isSettingsOpen = false,
   widgetSize,
   onSizeChange,
   isAlwaysOnTop,
@@ -123,9 +125,9 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
 
         {/* 設定 */}
         <button
-          className="hud-icon-btn"
+          className={`hud-icon-btn ${isSettingsOpen ? 'pinned' : ''}`}
           onClick={onOpenSettings}
-          title="設定を開く"
+          title={isSettingsOpen ? '設定を閉じる' : '設定を開く'}
         >
           ⚙️
         </button>

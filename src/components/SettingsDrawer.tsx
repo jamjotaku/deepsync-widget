@@ -12,6 +12,7 @@ import '../styles/settings.css';
 
 interface SettingsDrawerProps {
   isOpen: boolean;
+  onClose?: () => void;
   settings: AppSettings;
   onSettingsChange: (settings: Partial<AppSettings>) => void;
   availableMembers: string[];
@@ -26,6 +27,7 @@ const SIZE_KEYS: WidgetSize[] = ['small', 'medium', 'large', 'wide'];
 
 export function SettingsDrawer({
   isOpen,
+  onClose,
   settings,
   onSettingsChange,
   availableMembers,
@@ -54,13 +56,79 @@ export function SettingsDrawer({
   };
 
   return (
-    <div className={`settings-drawer ${isOpen ? 'settings-drawer--open' : ''}`}>
-      <div className="settings-drawer__scanline" />
+    <>
+      {/* ── 外側クリックで閉じるバックドロップ ── */}
+      {isOpen && (
+        <div
+          className="settings-drawer-backdrop"
+          onClick={onClose}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            zIndex: 19,
+          }}
+        />
+      )}
 
-      {/* Handle */}
-      <div className="settings-drawer__handle">
-        <div className="settings-drawer__handle-bar" />
-      </div>
+      <div className={`settings-drawer ${isOpen ? 'settings-drawer--open' : ''}`}>
+        <div className="settings-drawer__scanline" />
+
+        {/* ── ドロワーヘッダー (タイトル & 閉じるボタン) ── */}
+        <div
+          className="settings-drawer__header"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '10px 16px 6px',
+            borderBottom: '1px solid rgba(0, 242, 255, 0.15)',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '11px',
+              fontWeight: 700,
+              color: '#00f2ff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
+            <span>⚙️</span> SYSTEM CONFIGURATION
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'rgba(255, 0, 127, 0.1)',
+                border: '1px solid rgba(255, 0, 127, 0.3)',
+                color: '#ff007f',
+                borderRadius: '3px',
+                padding: '2px 8px',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '11px',
+                cursor: 'pointer',
+                fontWeight: 700,
+              }}
+              title="設定を閉じる"
+            >
+              ✕ CLOSE
+            </button>
+          )}
+        </div>
+
+        {/* Handle */}
+        <div
+          className="settings-drawer__handle"
+          onClick={onClose}
+          style={{ cursor: onClose ? 'pointer' : 'default' }}
+          title={onClose ? 'クリックして閉じる' : undefined}
+        >
+          <div className="settings-drawer__handle-bar" />
+        </div>
 
       <div className="settings-drawer__content">
         {/* ── サイズプリセット ── */}
@@ -285,5 +353,6 @@ export function SettingsDrawer({
         />
       </div>
     </div>
+    </>
   );
 }
