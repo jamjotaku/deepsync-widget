@@ -4,7 +4,7 @@
 // ===================================================
 
 import React, { useState } from 'react';
-import type { Playlist } from '../types';
+import type { Playlist, PlaylistItem } from '../types';
 import './MediaAddModal.css';
 
 interface MediaAddModalProps {
@@ -12,13 +12,16 @@ interface MediaAddModalProps {
   onClose: () => void;
   playlists: Playlist[];
   activePlaylistId: string | null;
+  onSelectPlaylist?: (id: string | null) => void;
   onAddUrls: (textInput: string, playlistId: string) => Promise<{ addedCount: number; errors: string[] }>;
   onCreatePlaylist: (name: string, desc?: string) => string | null;
   onDeletePlaylist: (id: string) => void;
+  onClearPlaylistItems?: (playlistId: string) => void;
   isProcessing: boolean;
   statusMessage: string | null;
   onDownloadBackup: () => void;
   onRestoreBackup: (jsonStr: string) => { success: boolean; message: string };
+  currentItems?: PlaylistItem[];
 }
 
 export const MediaAddModal: React.FC<MediaAddModalProps> = ({
@@ -26,13 +29,16 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
   onClose,
   playlists,
   activePlaylistId,
+  onSelectPlaylist,
   onAddUrls,
   onCreatePlaylist,
   onDeletePlaylist,
+  onClearPlaylistItems,
   isProcessing,
   statusMessage,
   onDownloadBackup,
   onRestoreBackup,
+  currentItems = [],
 }) => {
   const [activeTab, setActiveTab] = useState<'add' | 'manage' | 'backup'>('add');
   const [urlInput, setUrlInput] = useState('');
@@ -53,9 +59,11 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
       if (res.addedCount > 0) {
         setUrlInput('');
         setResultNotice(`✅ ${res.addedCount}枚の画像をプレイリストに追加しました！`);
+        // 追加先プレイリストを即座にアクティブ化
+        onSelectPlaylist?.(targetPlaylist);
       }
       if (res.errors.length > 0) {
-        setResultNotice(`⚠️ 一部失敗: ${res.errors.join(', ')}`);
+        setResultNotice(`⚠️ 一部失敗: ${res.errors.join(' | ')}`);
       }
     } catch (err) {
       setResultNotice(`❌ エラー: ${err instanceof Error ? err.message : String(err)}`);
@@ -71,6 +79,7 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
       setTargetPlaylist(id);
       setNewPlaylistName('');
       setResultNotice(`✅ プレイリスト「${newPlaylistName}」を作成しました`);
+      onSelectPlaylist?.(id);
     }
   };
 
@@ -113,7 +122,7 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
             className={`tab-btn ${activeTab === 'manage' ? 'active' : ''}`}
             onClick={() => setActiveTab('manage')}
           >
-            📁 プレイリスト一覧 ({playlists.length})
+            📁 プレイリスト管理 ({playlists.length})
           </button>
           <button
             className={`tab-btn ${activeTab === 'backup' ? 'active' : ''}`}
@@ -151,8 +160,8 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
               </label>
               <textarea
                 className="hud-input form-textarea"
-                rows={4}
-                placeholder={`https://x.com/username/status/1880000000000000000\nhttps://twitter.com/creator/status/1880000000000000001`}
+                rows={3}
+                placeholder={`https://x.com/creator/status/1880000000000000000\nhttps://twitter.com/creator/status/1880000000000000001`}
                 value={urlInput}
                 onChange={(e) => setUrlInput(e.target.value)}
                 disabled={isProcessing}
@@ -160,13 +169,40 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
             </div>
 
             <div className="api-badge-info">
-              ⚡ FxTwitter API を利用し、公式APIキー不要・高解像度オリジナル画像・投稿者名を自動抽出します。
+              ⚡ FxTwitter API を利用し、公式APIキー不要・高解像度オリジナル画像・投稿者名を自動抽出します（CORSプロキシフォールバック対応）。
             </div>
 
             {isProcessing && (
               <div className="processing-bar">
                 <span className="spinner">⏳</span>
                 <span className="processing-text">{statusMessage || '画像データを抽出中...'}</span>
+              </div>
+            )}
+
+            {/* 登録済み画像のミニプレビュー */}
+            {currentItems.length > 0 && (
+              <div style={{ marginTop: '8px' }}>
+                <div style={{ fontSize: '10px', color: '#7a8b9e', marginBottom: '4px' }}>
+                  登録済みメディア ({currentItems.length}件):
+                </div>
+                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+                  {currentItems.slice(0, 8).map((item) => (
+                    <img
+                      key={item.id}
+                      src={item.imageUrl}
+                      alt=""
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        objectFit: 'cover',
+                        borderRadius: '3px',
+                        border: '1px solid rgba(0, 242, 255, 0.3)',
+                        flexShrink: 0,
+                      }}
+                      title={item.authorName}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -190,7 +226,7 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
               <input
                 type="text"
                 className="hud-input"
-                placeholder="新しいプレイリスト名 (例: お気に入りイラスト)"
+                placeholder="新しいプレイリスト名 (例: 推しイラスト)"
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
               />
@@ -203,14 +239,40 @@ export const MediaAddModal: React.FC<MediaAddModalProps> = ({
             <div className="playlist-list">
               {playlists.map((pl) => (
                 <div key={pl.id} className="playlist-row">
-                  <div className="pl-info">
-                    <span className="pl-name">{pl.name}</span>
+                  <div
+                    className="pl-info"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      onSelectPlaylist?.(pl.id);
+                      setResultNotice(`再生プレイリストを「${pl.name}」に設定しました`);
+                    }}
+                    title="クリックしてこのプレイリストを再生"
+                  >
+                    <span className="pl-name">
+                      {pl.name} {activePlaylistId === pl.id ? '▶ [再生中]' : ''}
+                    </span>
                     <span className="pl-count">{pl.itemCount} 枚のメディア</span>
                   </div>
-                  <div className="pl-actions">
+                  <div className="pl-actions" style={{ display: 'flex', gap: '4px' }}>
+                    {onClearPlaylistItems && pl.itemCount > 0 && (
+                      <button
+                        className="hud-btn"
+                        style={{ fontSize: '9px', padding: '2px 5px', color: '#ffb700' }}
+                        onClick={() => {
+                          if (confirm(`「${pl.name}」の画像を全消去しますか？`)) {
+                            onClearPlaylistItems(pl.id);
+                            setResultNotice(`「${pl.name}」の画像を消去しました`);
+                          }
+                        }}
+                        title="このプレイリスト内の全画像を空にする"
+                      >
+                        画像を空にする
+                      </button>
+                    )}
                     {!pl.isDefault && (
                       <button
                         className="hud-btn danger-btn"
+                        style={{ fontSize: '9px', padding: '2px 5px' }}
                         onClick={() => onDeletePlaylist(pl.id)}
                         title="プレイリストと登録画像を削除"
                       >

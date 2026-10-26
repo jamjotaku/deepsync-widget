@@ -5,6 +5,7 @@
 
 import React from 'react';
 import type { FeedItem, NotificationItem, SlideData } from '../types';
+import { useClock } from '../hooks/useClock';
 import './DashboardGrid.css';
 
 interface DashboardGridProps {
@@ -60,6 +61,8 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
   onClearNotifications,
   onTriggerTestAlert,
 }) => {
+  const clock = useClock();
+
   return (
     <div className="dashboard-grid">
       {/* ── 1. メディア・スライドショー パネル ── */}
@@ -140,6 +143,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
       <section className="hud-card timer-card">
         <div className="card-header">
           <span className="card-badge">CHRONO TELEMETRY</span>
+          <span className="telemetry-sys-clock" title="システム現在時刻">
+            🕒 {clock.timeStr}
+          </span>
           <span className={`mode-pill mode-${pomodoroMode}`}>
             {pomodoroMode.toUpperCase()}
           </span>

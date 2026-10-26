@@ -28,40 +28,6 @@ const DEFAULT_PLAYLISTS: Playlist[] = [
   },
 ];
 
-/** 初期サンプルアイテム（初回起動時でもすぐ楽しめるように） */
-const INITIAL_ITEMS: PlaylistItem[] = [
-  {
-    id: 'sample_1',
-    imageUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1200&auto=format&fit=crop',
-    sourceLink: 'https://unsplash.com',
-    authorName: 'DeepSync Cyber',
-    authorHandle: '@deepsync',
-    text: 'サイバーパンク・ネオンシティ HUD 起動中',
-    addedAt: Date.now() - 3600000,
-    playlistId: 'default',
-  },
-  {
-    id: 'sample_2',
-    imageUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&auto=format&fit=crop',
-    sourceLink: 'https://unsplash.com',
-    authorName: 'Neon Interface',
-    authorHandle: '@neon_hud',
-    text: '高解像度アンビエントビジュアル',
-    addedAt: Date.now() - 1800000,
-    playlistId: 'default',
-  },
-  {
-    id: 'sample_3',
-    imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?q=80&w=1200&auto=format&fit=crop',
-    sourceLink: 'https://unsplash.com',
-    authorName: 'Digital Art',
-    authorHandle: '@art_archive',
-    text: 'コックピット・ビジュアルストリーム',
-    addedAt: Date.now() - 900000,
-    playlistId: 'default',
-  },
-];
-
 /**
  * プレイリスト一覧を取得
  */
@@ -69,10 +35,8 @@ export function getStoredPlaylists(): Playlist[] {
   try {
     const raw = localStorage.getItem(PLAYLISTS_KEY);
     if (!raw) {
-      const initial = [...DEFAULT_PLAYLISTS];
-      initial[0].itemCount = INITIAL_ITEMS.length;
-      localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(PLAYLISTS_KEY, JSON.stringify(DEFAULT_PLAYLISTS));
+      return DEFAULT_PLAYLISTS;
     }
     return JSON.parse(raw) as Playlist[];
   } catch (err) {
@@ -82,19 +46,25 @@ export function getStoredPlaylists(): Playlist[] {
 }
 
 /**
- * 全アイテムを取得
+ * 全アイテムを取得（サンプル画像が残っている場合は自動除去）
  */
 export function getStoredItems(): PlaylistItem[] {
   try {
     const raw = localStorage.getItem(ITEMS_KEY);
     if (!raw) {
-      localStorage.setItem(ITEMS_KEY, JSON.stringify(INITIAL_ITEMS));
-      return INITIAL_ITEMS;
+      localStorage.setItem(ITEMS_KEY, JSON.stringify([]));
+      return [];
     }
-    return JSON.parse(raw) as PlaylistItem[];
+    const items = JSON.parse(raw) as PlaylistItem[];
+    // sample_ で始まる初期モックデータを除去
+    const filtered = items.filter((item) => !item.id.startsWith('sample_'));
+    if (filtered.length !== items.length) {
+      saveItems(filtered);
+    }
+    return filtered;
   } catch (err) {
     console.error('Failed to load playlist items:', err);
-    return INITIAL_ITEMS;
+    return [];
   }
 }
 
@@ -132,6 +102,7 @@ export function saveItems(items: PlaylistItem[]): void {
  */
 export function playlistItemToSlideData(item: PlaylistItem): SlideData {
   return {
+    id: item.id,
     date: item.createdAt ? new Date(item.createdAt).toLocaleDateString('ja-JP') : 'RECENT',
     character: item.authorName || 'X User',
     displayName: item.authorHandle || '',

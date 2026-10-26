@@ -60,11 +60,13 @@ export default function App() {
   // ── プレイリスト管理 & X抽出 ──
   const {
     playlists,
+    items: playlistItems,
     slides: playlistSlides,
     activePlaylistId,
     setActivePlaylistId,
     createPlaylist,
     deletePlaylist,
+    clearPlaylistItems,
     addTweetUrls,
     deleteItem,
     isProcessing,
@@ -166,14 +168,22 @@ export default function App() {
 
   // ── 現在の画像削除 ──
   const handleDeleteCurrentSlide = useCallback(() => {
-    if (slideshow.currentSlide?.playlistId) {
-      const targetItem = playlistSlides.find(
-        (s) => s.imageUrl === slideshow.currentSlide?.imageUrl
-      );
-      if (targetItem) {
-        deleteItem(targetItem.imageUrl);
+    if (slideshow.currentSlide) {
+      const slideId = slideshow.currentSlide.id;
+      if (slideId) {
+        deleteItem(slideId);
         slideshow.next();
         addNotification('MEDIA EXPELLED', '画像をプレイリストから削除しました', 'warning', 'STORAGE');
+      } else {
+        // IDがない場合はimageUrlで検索
+        const targetItem = playlistSlides.find(
+          (s) => s.imageUrl === slideshow.currentSlide?.imageUrl
+        );
+        if (targetItem && targetItem.id) {
+          deleteItem(targetItem.id);
+          slideshow.next();
+          addNotification('MEDIA EXPELLED', '画像をプレイリストから削除しました', 'warning', 'STORAGE');
+        }
       }
     }
   }, [slideshow, playlistSlides, deleteItem, addNotification]);
@@ -308,13 +318,16 @@ export default function App() {
             onClose={() => setIsMediaModalOpen(false)}
             playlists={playlists}
             activePlaylistId={activePlaylistId}
+            onSelectPlaylist={setActivePlaylistId}
             onAddUrls={addTweetUrls}
             onCreatePlaylist={createPlaylist}
             onDeletePlaylist={deletePlaylist}
+            onClearPlaylistItems={clearPlaylistItems}
             isProcessing={isProcessing}
             statusMessage={statusMessage}
             onDownloadBackup={downloadBackup}
             onRestoreBackup={restoreBackup}
+            currentItems={playlistItems}
           />
 
           {/* ── 設定ドロワー ── */}

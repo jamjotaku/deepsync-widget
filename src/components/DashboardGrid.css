@@ -261,6 +261,15 @@
   min-height: 140px;
 }
 
+.telemetry-sys-clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #00f2ff;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 6px rgba(0, 242, 255, 0.4);
+}
+
 .mode-pill {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;

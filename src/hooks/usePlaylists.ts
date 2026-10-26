@@ -131,6 +131,21 @@ export function usePlaylists(initialActiveId: string | null = null) {
     setPlaylists(getStoredPlaylists());
   }, [items]);
 
+  // 指定プレイリストの全アイテム削除
+  const clearPlaylistItems = useCallback((playlistId: string) => {
+    const next = items.filter((item) => item.playlistId !== playlistId);
+    saveItems(next);
+    setItems(next);
+    setPlaylists(getStoredPlaylists());
+  }, [items]);
+
+  // 全アイテム全消去
+  const clearAllItems = useCallback(() => {
+    saveItems([]);
+    setItems([]);
+    setPlaylists(getStoredPlaylists());
+  }, []);
+
   // アイテムを別プレイリストへ移動
   const moveItemToPlaylist = useCallback((itemId: string, newPlaylistId: string) => {
     const next = items.map((item) =>
@@ -184,6 +199,8 @@ export function usePlaylists(initialActiveId: string | null = null) {
     deletePlaylist,
     addTweetUrls,
     deleteItem,
+    clearPlaylistItems,
+    clearAllItems,
     moveItemToPlaylist,
     isProcessing,
     statusMessage,

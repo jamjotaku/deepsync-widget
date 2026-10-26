@@ -5,6 +5,7 @@
 
 import React from 'react';
 import type { SlideData } from '../types';
+import { useClock } from '../hooks/useClock';
 import './NanoHUD.css';
 
 interface NanoHUDProps {
@@ -28,6 +29,8 @@ export const NanoHUD: React.FC<NanoHUDProps> = ({
   onExpandDashboard,
   onNextSlide,
 }) => {
+  const clock = useClock();
+
   return (
     <div className="nano-hud-bar" data-tauri-drag-region>
       {/* サムネイル */}
@@ -37,6 +40,11 @@ export const NanoHUD: React.FC<NanoHUDProps> = ({
         ) : (
           <div className="thumb-placeholder">🌌</div>
         )}
+      </div>
+
+      {/* リアルタイム時計 */}
+      <div className="nano-clock" title="システム現在時刻">
+        {clock.timeStr}
       </div>
 
       {/* タイマー表示 */}

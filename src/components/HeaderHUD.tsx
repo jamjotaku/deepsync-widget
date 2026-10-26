@@ -6,6 +6,7 @@
 import React from 'react';
 import type { DisplayMode, Playlist, WidgetSize } from '../types';
 import { WIDGET_SIZES } from '../types';
+import { useClock } from '../hooks/useClock';
 import './HeaderHUD.css';
 
 interface HeaderHUDProps {
@@ -39,13 +40,19 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   onToggleAlwaysOnTop,
   pomodoroMode,
 }) => {
+  const clock = useClock();
+
   return (
     <header className="hud-header" data-tauri-drag-region>
-      {/* 左側: システム識別 & ステータス */}
+      {/* 左側: システム識別 & リアルタイム時計 */}
       <div className="header-brand" data-tauri-drag-region>
         <span className="brand-badge">HUD</span>
         <span className="brand-title">DEEPSYNC</span>
         <span className={`status-dot mode-${pomodoroMode}`} title={`Mode: ${pomodoroMode}`} />
+        <div className="header-clock" title="システム現在時刻">
+          <span className="clock-date">{clock.dateStr}</span>
+          <span className="clock-time">{clock.timeStr}</span>
+        </div>
       </div>
 
       {/* 中央: プレイリスト選択 & クイック追加 */}

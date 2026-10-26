@@ -82,6 +82,32 @@
   color: #708090;
 }
 
+/* リアルタイムデジタル時計 */
+.header-clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 242, 255, 0.2);
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.05em;
+  margin-left: 4px;
+}
+
+.clock-date {
+  font-size: 9px;
+  color: #65859e;
+}
+
+.clock-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00f2ff;
+  text-shadow: 0 0 6px rgba(0, 242, 255, 0.5);
+}
+
 /* 中央: プレイリスト選択 & 追加 */
 .header-playlist-bar {
   display: flex;

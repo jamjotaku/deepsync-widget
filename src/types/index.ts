@@ -4,6 +4,8 @@
 
 /** スライドショーに使用する1枚分のデータ（CSVまたはプレイリスト共通） */
 export interface SlideData {
+  /** アイテムID */
+  id?: string;
   /** 日付 (YYYY/MM/DD) */
   date: string;
   /** キャラクター名 = UIでは「メンバー」 */

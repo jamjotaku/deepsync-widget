@@ -1,11 +1,12 @@
 // ===================================================
 // DeepSync HUD — Twitter / X Media Extractor
 // FxTwitter / VxTwitter API を利用してポスト画像とメタデータを抽出
+// CORSプロキシフォールバック対応
 // ===================================================
 
 import type { PlaylistItem } from '../types';
 
-/** FxTwitter API レスポンス型 (必要部分のみ定義) */
+/** FxTwitter API レスポンス型 */
 interface FxTweetResponse {
   code: number;
   message?: string;
@@ -32,25 +33,36 @@ interface FxTweetResponse {
         url: string;
         thumbnail_url?: string;
       }>;
+      mosaic?: {
+        formats?: {
+          jpeg?: string;
+          webp?: string;
+        };
+      };
     };
+    // vxTwitter 互換
+    media_extended?: Array<{
+      type?: string;
+      url: string;
+      size?: { w: number; h: number };
+    }>;
   };
 }
 
 /**
  * X/TwitterのURLまたはステータスIDをパース
- * 戻り値: { statusId: string, screenName?: string } | null
  */
 export function parseTweetUrl(input: string): { statusId: string; screenName?: string } | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
 
-  // 数値のみの場合はステータスIDとみなす
+  // 数値のみの場合はステータスID
   if (/^\d+$/.test(trimmed)) {
     return { statusId: trimmed };
   }
 
-  // URLパターン: x.com / twitter.com / fxtwitter.com / vxtwitter.com
-  const regex = /(?:https?:\/\/)?(?:(?:www\.|mobile\.)?(?:twitter|x|fxtwitter|vxtwitter|fixupx)\.com)\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d+)/i;
+  // URLから status ID を抽出 (クエリパラメータやハッシュ対応)
+  const regex = /(?:twitter|x|fxtwitter|vxtwitter|fixupx)\.com\/([a-zA-Z0-9_]+)\/status(?:es)?\/(\d+)/i;
   const match = trimmed.match(regex);
 
   if (match) {
@@ -60,6 +72,12 @@ export function parseTweetUrl(input: string): { statusId: string; screenName?: s
     };
   }
 
+  // status/数値 パターン
+  const altMatch = /status(?:es)?\/(\d+)/i.exec(trimmed);
+  if (altMatch) {
+    return { statusId: altMatch[1] };
+  }
+
   return null;
 }
 
@@ -67,13 +85,13 @@ export function parseTweetUrl(input: string): { statusId: string; screenName?: s
  * 複数行のテキストからツイートURLを抽出
  */
 export function extractTweetUrls(text: string): string[] {
-  const lines = text.split(/[\r\n\s]+/);
+  const tokens = text.split(/[\r\n\s]+/);
   const validUrls: string[] = [];
 
-  for (const line of lines) {
-    const parsed = parseTweetUrl(line);
+  for (const token of tokens) {
+    const parsed = parseTweetUrl(token);
     if (parsed) {
-      validUrls.push(line.trim());
+      validUrls.push(token.trim());
     }
   }
 
@@ -81,9 +99,38 @@ export function extractTweetUrls(text: string): string[] {
 }
 
 /**
+ * URLからJSONを取得（直接リクエスト ＋ CORSプロキシフォールバック）
+ */
+async function fetchJsonWithFallback(apiUrl: string): Promise<FxTweetResponse> {
+  const urlsToTry = [
+    apiUrl,
+    `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(apiUrl)}`,
+  ];
+
+  let lastErr: Error | null = null;
+
+  for (const target of urlsToTry) {
+    try {
+      const res = await fetch(target, {
+        headers: { Accept: 'application/json' },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json && (json.tweet || json.code === 200)) {
+          return json as FxTweetResponse;
+        }
+      }
+    } catch (err) {
+      lastErr = err instanceof Error ? err : new Error(String(err));
+    }
+  }
+
+  throw lastErr || new Error(`Failed to fetch from ${apiUrl}`);
+}
+
+/**
  * 単一のツイートから画像とメタデータを抽出
- * @param urlOrId XポストURLまたはステータスID
- * @param targetPlaylistId 追加先のプレイリストID
  */
 export async function fetchTweetMedia(
   urlOrId: string,
@@ -91,78 +138,85 @@ export async function fetchTweetMedia(
 ): Promise<PlaylistItem[]> {
   const parsed = parseTweetUrl(urlOrId);
   if (!parsed) {
-    throw new Error('有効なX (Twitter) ポストURLまたはIDを入力してください');
+    throw new Error('有効なX (Twitter) ポストURLまたはIDを入力してください (例: https://x.com/user/status/12345)');
   }
 
   const { statusId, screenName } = parsed;
 
-  // 1. FxTwitter API を呼び出し
-  const endpoints = [
+  const targetApis = [
     screenName
       ? `https://api.fxtwitter.com/${screenName}/status/${statusId}`
       : `https://api.fxtwitter.com/status/${statusId}`,
-    `https://api.vxtwitter.com/status/${statusId}`,
+    `https://api.vxtwitter.com/Twitter/status/${statusId}`,
   ];
 
-  let lastError: Error | null = null;
   let data: FxTweetResponse | null = null;
+  let lastError: Error | null = null;
 
-  for (const endpoint of endpoints) {
+  for (const api of targetApis) {
     try {
-      const res = await fetch(endpoint, {
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`API HTTP ${res.status}: ${res.statusText}`);
-      }
-
-      const json = (await res.json()) as FxTweetResponse;
-      if (json && json.code === 200 && json.tweet) {
-        data = json;
-        break;
-      }
+      data = await fetchJsonWithFallback(api);
+      if (data && data.tweet) break;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      // 次のフォールバックエンドポイントを試す
     }
   }
 
   if (!data || !data.tweet) {
     throw new Error(
       lastError
-        ? `ツイート情報の取得に失敗しました: ${lastError.message}`
-        : 'ツイート情報の取得に失敗しました。URLをご確認ください。'
+        ? `ポスト情報の取得に失敗しました: ${lastError.message}`
+        : 'ポスト情報が見つかりませんでした。URLをご確認ください。'
     );
   }
 
   const tweet = data.tweet;
-  const photos = tweet.media?.photos ?? [];
 
-  if (photos.length === 0) {
+  // 画像リストの収集 (photos, media_extended, videosのサムネイル)
+  const imageUrls: string[] = [];
+
+  // 1. media.photos
+  if (tweet.media?.photos && tweet.media.photos.length > 0) {
+    tweet.media.photos.forEach((p) => {
+      if (p.url) imageUrls.push(p.url);
+    });
+  }
+
+  // 2. media_extended (vxTwitter)
+  if (imageUrls.length === 0 && tweet.media_extended && tweet.media_extended.length > 0) {
+    tweet.media_extended.forEach((m) => {
+      if (m.type === 'image' && m.url) {
+        imageUrls.push(m.url);
+      }
+    });
+  }
+
+  if (imageUrls.length === 0) {
     throw new Error('このポストには画像が含まれていません');
   }
 
   const resultItems: PlaylistItem[] = [];
 
-  photos.forEach((photo, idx) => {
-    // 高解像度画像URLの確保 (pbs.twimg.comの画像ならname=origまたはname=largeにする)
-    let optimizedUrl = photo.url;
+  imageUrls.forEach((rawUrl, idx) => {
+    let optimizedUrl = rawUrl;
+    // Twitter公式画像サーバーの場合、高画質パラメータを付与
     if (optimizedUrl.includes('pbs.twimg.com/media/')) {
-      const urlObj = new URL(optimizedUrl);
-      urlObj.searchParams.set('name', 'orig');
-      optimizedUrl = urlObj.toString();
+      try {
+        const u = new URL(optimizedUrl);
+        u.searchParams.set('name', 'orig');
+        optimizedUrl = u.toString();
+      } catch {
+        // noop
+      }
     }
 
     resultItems.push({
       id: `tweet-${tweet.id}_${idx}_${Date.now()}`,
       imageUrl: optimizedUrl,
-      sourceLink: tweet.url || `https://x.com/${tweet.author.screen_name}/status/${tweet.id}`,
-      authorName: tweet.author.name,
-      authorHandle: `@${tweet.author.screen_name}`,
-      authorAvatar: tweet.author.avatar_url,
+      sourceLink: tweet.url || `https://x.com/${tweet.author?.screen_name || 'i'}/status/${tweet.id}`,
+      authorName: tweet.author?.name || 'X Creator',
+      authorHandle: tweet.author?.screen_name ? `@${tweet.author.screen_name}` : '@unknown',
+      authorAvatar: tweet.author?.avatar_url,
       text: tweet.text,
       createdAt: tweet.created_at,
       addedAt: Date.now(),
