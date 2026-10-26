@@ -27,6 +27,40 @@ html, body, #root {
 }
 
 /* ── App Container ── */
+.app-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* ブラウザプレビュー時のウィジェット枠シミュレーター */
+.app-wrapper.browser-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at center, #0e131d 0%, #05060a 100%);
+  padding: 20px;
+  overflow: auto;
+}
+
+.app-wrapper.browser-mode .app {
+  width: var(--preview-width, 360px);
+  height: var(--preview-height, 520px);
+  max-width: 98vw;
+  max-height: 96vh;
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 242, 255, 0.2);
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1), height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-wrapper.native-mode,
+.app-wrapper.native-mode .app {
+  width: 100%;
+  height: 100%;
+}
+
 .app {
   position: relative;
   width: 100%;
@@ -35,6 +69,8 @@ html, body, #root {
   border-radius: var(--radius-lg);
   background: var(--bg-primary);
   border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── Scrollbar (settings drawer) ── */

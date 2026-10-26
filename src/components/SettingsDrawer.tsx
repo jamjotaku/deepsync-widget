@@ -23,7 +23,7 @@ interface SettingsDrawerProps {
   onRemoveFeedSource?: (id: string) => void;
 }
 
-const SIZE_KEYS: WidgetSize[] = ['small', 'medium', 'large', 'wide'];
+const SIZE_KEYS: WidgetSize[] = ['small', 'medium', 'large', 'wide', 'expanded'];
 
 export function SettingsDrawer({
   isOpen,

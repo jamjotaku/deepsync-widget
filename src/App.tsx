@@ -20,7 +20,7 @@ import { useFeedReader } from './hooks/useFeedReader';
 import { useNotifications } from './hooks/useNotifications';
 import { DEFAULT_SETTINGS, WIDGET_SIZES } from './types';
 import type { AppSettings, DisplayMode, SlideData } from './types';
-import { setAlwaysOnTop, resizeWindow } from './lib/windowManager';
+import { setAlwaysOnTop, resizeWindow, isTauri } from './lib/windowManager';
 import './App.css';
 
 export default function App() {
@@ -216,9 +216,29 @@ export default function App() {
     settings.selectedMembers.length + settings.selectedLayers.length;
   const dataMode = pomodoro.mode === 'break' ? 'break' : 'focus';
 
+  // ── プレビュー用サイズ計算（ブラウザモード時） ──
+  const isNative = isTauri();
+  const currentDimensions = useMemo(() => {
+    if (settings.displayMode === 'nano') {
+      return { width: 380, height: 44 };
+    }
+    return WIDGET_SIZES[settings.widgetSize] || WIDGET_SIZES.medium;
+  }, [settings.displayMode, settings.widgetSize]);
+
   return (
-    <div className={`app mode-${settings.displayMode}`} data-mode={dataMode}>
-      {/* ── 1. NANO モード (極小バー) ── */}
+    <div
+      className={`app-wrapper ${isNative ? 'native-mode' : 'browser-mode'}`}
+      style={
+        !isNative
+          ? ({
+              '--preview-width': `${currentDimensions.width}px`,
+              '--preview-height': `${currentDimensions.height}px`,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
+      <div className={`app mode-${settings.displayMode}`} data-mode={dataMode}>
+        {/* ── 1. NANO モード (極小バー) ── */}
       {settings.displayMode === 'nano' ? (
         <NanoHUD
           currentSlide={slideshow.currentSlide}
@@ -353,6 +373,7 @@ export default function App() {
           <HUDToast toasts={activeToasts} onClose={closeToast} />
         </>
       )}
+      </div>
     </div>
   );
 }
