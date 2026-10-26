@@ -1,0 +1,135 @@
+/* ===================================================
+   HUD Toast — Cyberpunk Toast Notification Styling
+   =================================================== */
+
+.hud-toast-container {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+  pointer-events: none;
+  max-width: 320px;
+  width: calc(100% - 32px);
+}
+
+.hud-toast-item {
+  pointer-events: auto;
+  background: rgba(12, 16, 24, 0.94);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 242, 255, 0.4);
+  border-radius: 4px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 242, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  position: relative;
+  overflow: hidden;
+  animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hud-toast-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #00f2ff;
+}
+
+.hud-toast-item.type-success::before {
+  background: #00ff88;
+}
+.hud-toast-item.type-success {
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.hud-toast-item.type-warning::before {
+  background: #ffb700;
+}
+.hud-toast-item.type-warning {
+  border-color: rgba(255, 183, 0, 0.4);
+}
+
+.hud-toast-item.type-alert::before {
+  background: #ff007f;
+}
+.hud-toast-item.type-alert {
+  border-color: rgba(255, 0, 127, 0.5);
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+}
+
+.toast-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.toast-type-tag {
+  color: #00f2ff;
+}
+
+.toast-source {
+  color: #708090;
+  margin-left: 6px;
+  flex: 1;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: #8899aa;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0 3px;
+}
+
+.toast-close:hover {
+  color: #ff007f;
+}
+
+.toast-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #eaf2f8;
+}
+
+.toast-message {
+  font-size: 10px;
+  color: #a8b8c8;
+  line-height: 1.3;
+}
+
+.toast-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: rgba(0, 242, 255, 0.6);
+  width: 100%;
+  animation: toastCountdown 5s linear forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastCountdown {
+  from { width: 100%; }
+  to { width: 0%; }
+}

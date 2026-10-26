@@ -3,7 +3,7 @@
 // サイバーパンク情報ダッシュボード & スライドショーウィジェット
 // ===================================================
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { Slideshow } from './components/Slideshow';
 import { HUDOverlay } from './components/HUDOverlay';
 import { HeaderHUD } from './components/HeaderHUD';
@@ -11,10 +11,13 @@ import { DashboardGrid } from './components/DashboardGrid';
 import { NanoHUD } from './components/NanoHUD';
 import { MediaAddModal } from './components/MediaAddModal';
 import { SettingsDrawer } from './components/SettingsDrawer';
+import { HUDToast } from './components/HUDToast';
 import { useCsvData } from './hooks/useCsvData';
 import { usePlaylists } from './hooks/usePlaylists';
 import { useSlideshow } from './hooks/useSlideshow';
 import { usePomodoro } from './hooks/usePomodoro';
+import { useFeedReader } from './hooks/useFeedReader';
+import { useNotifications } from './hooks/useNotifications';
 import { DEFAULT_SETTINGS, WIDGET_SIZES } from './types';
 import type { AppSettings, DisplayMode, SlideData } from './types';
 import { setAlwaysOnTop, resizeWindow } from './lib/windowManager';
@@ -25,6 +28,34 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+
+  // ── 外部通知 & トースト ──
+  const {
+    notifications,
+    activeToasts,
+    closeToast,
+    addNotification,
+    clearAllNotifications,
+  } = useNotifications();
+
+  // ── RSS / SNS シグナルフィード ──
+  const {
+    feedItems,
+    sources: feedSources,
+    isLoading: isFeedLoading,
+    refreshFeeds,
+    toggleSource: toggleFeedSource,
+    addSource: addFeedSource,
+    removeSource: removeFeedSource,
+  } = useFeedReader((newItem) => {
+    // 新着フィード受信時のトースト通知
+    addNotification(
+      `NEW SIGNAL: [${newItem.badge}]`,
+      newItem.title,
+      'info',
+      newItem.source
+    );
+  });
 
   // ── プレイリスト管理 & X抽出 ──
   const {
@@ -54,8 +85,31 @@ export default function App() {
 
   // ── ポモドーロ ──
   const pomodoro = usePomodoro(settings);
+  const lastPomodoroModeRef = useRef(pomodoro.mode);
 
-  // ── スライドソースの統合（プレイリスト優先、無ければCSVまたはハイブリッド） ──
+  // ポモドーロモード切替時の自動HUDトースト
+  useEffect(() => {
+    if (lastPomodoroModeRef.current !== pomodoro.mode) {
+      if (pomodoro.mode === 'focus') {
+        addNotification(
+          'FOCUS PROTOCOL ENGAGED',
+          `${settings.focusDuration}分間の集中セッションを開始しました。`,
+          'info',
+          'CHRONO'
+        );
+      } else if (pomodoro.mode === 'break') {
+        addNotification(
+          'RECOVERY MODE ACTIVATED',
+          `${settings.breakDuration}分間の休憩時間です。深呼吸しましょう。`,
+          'success',
+          'CHRONO'
+        );
+      }
+      lastPomodoroModeRef.current = pomodoro.mode;
+    }
+  }, [pomodoro.mode, settings.focusDuration, settings.breakDuration, addNotification]);
+
+  // ── スライドソースの統合 ──
   const combinedSlides = useMemo<SlideData[]>(() => {
     if (settings.mediaSourceMode === 'csv') {
       return csvSlides;
@@ -63,7 +117,6 @@ export default function App() {
     if (settings.mediaSourceMode === 'hybrid') {
       return [...playlistSlides, ...csvSlides];
     }
-    // デフォルト: プレイリスト
     return playlistSlides.length > 0 ? playlistSlides : csvSlides;
   }, [settings.mediaSourceMode, playlistSlides, csvSlides]);
 
@@ -86,12 +139,10 @@ export default function App() {
   const updateSettings = useCallback((partial: Partial<AppSettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...partial };
-      // ウィンドウサイズ同期
       if (partial.widgetSize && WIDGET_SIZES[partial.widgetSize]) {
         const { width, height } = WIDGET_SIZES[partial.widgetSize];
         resizeWindow(width, height).catch(() => {});
       }
-      // 最前面同期
       if (partial.alwaysOnTop !== undefined) {
         setAlwaysOnTop(partial.alwaysOnTop).catch(() => {});
       }
@@ -103,7 +154,6 @@ export default function App() {
   const handleModeChange = useCallback(
     (mode: DisplayMode) => {
       updateSettings({ displayMode: mode });
-      // Nanoモード時はウィンドウをスリムにリサイズ
       if (mode === 'nano') {
         resizeWindow(380, 48).catch(() => {});
       } else {
@@ -117,16 +167,28 @@ export default function App() {
   // ── 現在の画像削除 ──
   const handleDeleteCurrentSlide = useCallback(() => {
     if (slideshow.currentSlide?.playlistId) {
-      // プレイリストアイテムを削除
       const targetItem = playlistSlides.find(
         (s) => s.imageUrl === slideshow.currentSlide?.imageUrl
       );
       if (targetItem) {
         deleteItem(targetItem.imageUrl);
         slideshow.next();
+        addNotification('MEDIA EXPELLED', '画像をプレイリストから削除しました', 'warning', 'STORAGE');
       }
     }
-  }, [slideshow, playlistSlides, deleteItem]);
+  }, [slideshow, playlistSlides, deleteItem, addNotification]);
+
+  // テスト通知トリガー
+  const handleTriggerTestAlert = useCallback(() => {
+    const types: Array<'info' | 'success' | 'warning' | 'alert'> = ['info', 'success', 'warning', 'alert'];
+    const randomType = types[Math.floor(Math.random() * types.length)];
+    addNotification(
+      'INCOMING TELEMETRY ALERT',
+      '外部システムまたはWebhookからのシグナルを受信しました。',
+      randomType,
+      'DISCORD/HOOK'
+    );
+  }, [addNotification]);
 
   const activeFilterCount =
     settings.selectedMembers.length + settings.selectedLayers.length;
@@ -184,6 +246,12 @@ export default function App() {
               onTimerPause={pomodoro.pause}
               onTimerReset={pomodoro.reset}
               onTimerSkip={pomodoro.skip}
+              feedItems={feedItems}
+              isFeedLoading={isFeedLoading}
+              onRefreshFeeds={refreshFeeds}
+              notifications={notifications}
+              onClearNotifications={clearAllNotifications}
+              onTriggerTestAlert={handleTriggerTestAlert}
             />
           )}
 
@@ -243,7 +311,14 @@ export default function App() {
             onSettingsChange={updateSettings}
             availableMembers={uniqueMembers}
             availableLayers={uniqueLayers}
+            feedSources={feedSources}
+            onToggleFeedSource={toggleFeedSource}
+            onAddFeedSource={addFeedSource}
+            onRemoveFeedSource={removeFeedSource}
           />
+
+          {/* ── サイバーパンク ホログラムHUDトースト ── */}
+          <HUDToast toasts={activeToasts} onClose={closeToast} />
         </>
       )}
     </div>

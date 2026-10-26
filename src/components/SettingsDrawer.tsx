@@ -5,8 +5,9 @@
 
 import { FilterPanel } from './FilterPanel';
 import { setWidgetSize, setAlwaysOnTop } from '../lib/windowManager';
-import type { AppSettings, WidgetSize } from '../types';
+import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
+import type { FeedSourceConfig } from '../hooks/useFeedReader';
 import '../styles/settings.css';
 
 interface SettingsDrawerProps {
@@ -15,6 +16,10 @@ interface SettingsDrawerProps {
   onSettingsChange: (settings: Partial<AppSettings>) => void;
   availableMembers: string[];
   availableLayers: string[];
+  feedSources?: FeedSourceConfig[];
+  onToggleFeedSource?: (id: string) => void;
+  onAddFeedSource?: (name: string, url: string, badge?: string) => void;
+  onRemoveFeedSource?: (id: string) => void;
 }
 
 const SIZE_KEYS: WidgetSize[] = ['small', 'medium', 'large', 'wide'];
@@ -25,6 +30,10 @@ export function SettingsDrawer({
   onSettingsChange,
   availableMembers,
   availableLayers,
+  feedSources,
+  onToggleFeedSource,
+  onAddFeedSource,
+  onRemoveFeedSource,
 }: SettingsDrawerProps) {
   const handleSizeChange = async (size: WidgetSize) => {
     onSettingsChange({ widgetSize: size });
@@ -159,6 +168,107 @@ export function SettingsDrawer({
             </div>
           </div>
         </div>
+
+        {/* ── メディアソース選択 ── */}
+        <div className="settings-section">
+          <div className="settings-section__title">メディアソース</div>
+          <div className="settings-sizes">
+            {(
+              [
+                { key: 'playlist', label: 'Xプレイリスト' },
+                { key: 'csv', label: 'Google Sheets' },
+                { key: 'hybrid', label: '両方 (ハイブリッド)' },
+              ] as const
+            ).map(({ key, label }) => (
+              <button
+                key={key}
+                className={`settings-size-btn ${
+                  settings.mediaSourceMode === key ? 'settings-size-btn--active' : ''
+                }`}
+                onClick={() => onSettingsChange({ mediaSourceMode: key as MediaSourceMode })}
+              >
+                <span className="settings-size-btn__label">{label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── RSS フィードソース ── */}
+        {feedSources && (
+          <div className="settings-section">
+            <div className="settings-section__title">RSS シグナルフィード</div>
+            <div className="feed-sources-list">
+              {feedSources.map((source) => (
+                <div
+                  key={source.id}
+                  className="settings-toggle"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+                >
+                  <span
+                    className="settings-toggle__label"
+                    style={{ flex: 1, cursor: 'pointer' }}
+                    onClick={() => onToggleFeedSource?.(source.id)}
+                  >
+                    [{source.badge}] {source.name}
+                  </span>
+                  <div
+                    className={`settings-toggle__switch ${
+                      source.enabled ? 'settings-toggle__switch--on' : ''
+                    }`}
+                    onClick={() => onToggleFeedSource?.(source.id)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className="settings-toggle__switch-knob" />
+                  </div>
+                  {onRemoveFeedSource && (
+                    <button
+                      className="hud-mini-action-btn"
+                      style={{ color: '#ff007f', borderColor: 'rgba(255,0,127,0.3)' }}
+                      onClick={() => onRemoveFeedSource(source.id)}
+                      title="このフィードを削除"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {onAddFeedSource && (
+              <div style={{ marginTop: '8px', display: 'flex', gap: '4px' }}>
+                <input
+                  type="text"
+                  placeholder="RSS URL (例: https://...)"
+                  className="hud-input"
+                  style={{ flex: 1, padding: '4px 6px', fontSize: '10px' }}
+                  id="custom-rss-input"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const input = e.currentTarget;
+                      if (input.value.trim()) {
+                        onAddFeedSource('Custom RSS', input.value.trim(), 'RSS');
+                        input.value = '';
+                      }
+                    }
+                  }}
+                />
+                <button
+                  className="hud-btn hud-btn-accent"
+                  style={{ padding: '4px 8px', fontSize: '10px' }}
+                  onClick={() => {
+                    const input = document.getElementById('custom-rss-input') as HTMLInputElement | null;
+                    if (input && input.value.trim()) {
+                      onAddFeedSource('Custom RSS', input.value.trim(), 'RSS');
+                      input.value = '';
+                    }
+                  }}
+                >
+                  ＋追加
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── フィルタ ── */}
         <FilterPanel

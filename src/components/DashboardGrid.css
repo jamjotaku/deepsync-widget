@@ -82,6 +82,36 @@
   animation: pulseGlow 2s infinite ease-in-out;
 }
 
+.hud-mini-action-btn {
+  background: rgba(0, 242, 255, 0.1);
+  border: 1px solid rgba(0, 242, 255, 0.3);
+  border-radius: 2px;
+  color: #00f2ff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.hud-mini-action-btn:hover {
+  background: rgba(0, 242, 255, 0.25);
+  box-shadow: 0 0 6px rgba(0, 242, 255, 0.5);
+  color: #fff;
+}
+
+.alert-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.alert-source-tag {
+  color: #7a8b9e;
+  font-size: 8.5px;
+}
+
 /* ── 1. メディアカード ── */
 .media-card {
   grid-row: span 2;

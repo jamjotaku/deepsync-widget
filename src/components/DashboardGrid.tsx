@@ -3,7 +3,7 @@
 // 4モジュール (メディア / フィード / 通知 / タイマー) を統合したサイバーパンクHUD
 // ===================================================
 
-import React, { useState } from 'react';
+import React from 'react';
 import type { FeedItem, NotificationItem, SlideData } from '../types';
 import './DashboardGrid.css';
 
@@ -26,57 +26,14 @@ interface DashboardGridProps {
   onTimerPause: () => void;
   onTimerReset: () => void;
   onTimerSkip: () => void;
+  // フィード & 通知連携
+  feedItems: FeedItem[];
+  isFeedLoading: boolean;
+  onRefreshFeeds: () => void;
+  notifications: NotificationItem[];
+  onClearNotifications: () => void;
+  onTriggerTestAlert?: () => void;
 }
-
-// サンプルフィード（後でRSS/X連携に接続）
-const INITIAL_FEEDS: FeedItem[] = [
-  {
-    id: 'f1',
-    title: 'DeepSync HUD v2.0 再起動完了 - サイバーコックピット稼働中',
-    source: 'SYSTEM',
-    url: '#',
-    timestamp: 'NOW',
-    badge: 'ONLINE',
-  },
-  {
-    id: 'f2',
-    title: 'X (Twitter) FxTwitter API連携モジュールがアクティブになりました',
-    source: 'MODULE',
-    url: '#',
-    timestamp: '2m ago',
-    badge: 'X/TW',
-  },
-  {
-    id: 'f3',
-    title: 'Tauri v2 デスクトップ常駐エンジン待機中',
-    source: 'TELEMETRY',
-    url: '#',
-    timestamp: '15m ago',
-    badge: 'CORE',
-  },
-];
-
-// サンプル通知
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'n1',
-    title: 'FOCUS SESSION READY',
-    message: '集中セッションを開始する準備が整いました。',
-    type: 'info',
-    timestamp: Date.now() - 60000,
-    source: 'Timer',
-    read: false,
-  },
-  {
-    id: 'n2',
-    title: 'SYNC COMPLETED',
-    message: 'メディアプレイリストの同期が完了しました。',
-    type: 'success',
-    timestamp: Date.now() - 300000,
-    source: 'Store',
-    read: true,
-  },
-];
 
 export const DashboardGrid: React.FC<DashboardGridProps> = ({
   currentSlide,
@@ -96,14 +53,13 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
   onTimerPause,
   onTimerReset,
   onTimerSkip,
+  feedItems,
+  isFeedLoading,
+  onRefreshFeeds,
+  notifications,
+  onClearNotifications,
+  onTriggerTestAlert,
 }) => {
-  const [feeds] = useState<FeedItem[]>(INITIAL_FEEDS);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
-
-  const clearNotifications = () => {
-    setNotifications([]);
-  };
-
   return (
     <div className="dashboard-grid">
       {/* ── 1. メディア・スライドショー パネル ── */}
@@ -227,25 +183,36 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
       <section className="hud-card feed-card">
         <div className="card-header">
           <span className="card-badge">SIGNAL FEED</span>
-          <span className="signal-status">⚡ LIVE</span>
+          <button
+            className="hud-mini-action-btn"
+            onClick={onRefreshFeeds}
+            disabled={isFeedLoading}
+            title="フィードを今すぐ再取得"
+          >
+            {isFeedLoading ? '⏳ SYNCING' : '🔄 SYNC'}
+          </button>
         </div>
 
         <div className="feed-list">
-          {feeds.map((feed) => (
-            <a
-              key={feed.id}
-              href={feed.url}
-              target="_blank"
-              rel="noreferrer"
-              className="feed-item-row"
-            >
-              <div className="feed-meta">
-                <span className="feed-badge">{feed.badge}</span>
-                <span className="feed-time">{feed.timestamp}</span>
-              </div>
-              <div className="feed-title">{feed.title}</div>
-            </a>
-          ))}
+          {feedItems.length > 0 ? (
+            feedItems.slice(0, 15).map((feed) => (
+              <a
+                key={feed.id}
+                href={feed.url}
+                target="_blank"
+                rel="noreferrer"
+                className="feed-item-row"
+              >
+                <div className="feed-meta">
+                  <span className="feed-badge">{feed.badge}</span>
+                  <span className="feed-time">{feed.timestamp}</span>
+                </div>
+                <div className="feed-title">{feed.title}</div>
+              </a>
+            ))
+          ) : (
+            <div className="empty-alerts">NO SIGNALS DETECTED</div>
+          )}
         </div>
       </section>
 
@@ -253,11 +220,18 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
       <section className="hud-card alert-card">
         <div className="card-header">
           <span className="card-badge">ALERT MONITOR</span>
-          {notifications.length > 0 && (
-            <button className="clear-btn" onClick={clearNotifications} title="通知を消去">
-              CLEAR
-            </button>
-          )}
+          <div className="alert-actions">
+            {onTriggerTestAlert && (
+              <button className="hud-mini-action-btn" onClick={onTriggerTestAlert} title="テスト通知を発火">
+                ⚡ TEST
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button className="clear-btn" onClick={onClearNotifications} title="通知を消去">
+                CLEAR
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="alert-list">
@@ -266,6 +240,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
               <div key={notif.id} className={`alert-item type-${notif.type}`}>
                 <div className="alert-head">
                   <span className="alert-type-tag">[{notif.type.toUpperCase()}]</span>
+                  <span className="alert-source-tag">[{notif.source || 'SYS'}]</span>
                   <span className="alert-title">{notif.title}</span>
                 </div>
                 <div className="alert-body">{notif.message}</div>
