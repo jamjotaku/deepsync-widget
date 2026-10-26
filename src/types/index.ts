@@ -125,7 +125,7 @@ export interface AppSettings {
 /** デフォルト設定 */
 export const DEFAULT_SETTINGS: AppSettings = {
   displayMode: 'dashboard',
-  mediaSourceMode: 'playlist',
+  mediaSourceMode: 'hybrid',
   activePlaylistId: null,
   widgetSize: 'medium',
   alwaysOnTop: true,

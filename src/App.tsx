@@ -239,6 +239,9 @@ export default function App() {
             playlists={playlists}
             activePlaylistId={activePlaylistId}
             onPlaylistChange={setActivePlaylistId}
+            mediaSourceMode={settings.mediaSourceMode}
+            onMediaSourceChange={(mode) => updateSettings({ mediaSourceMode: mode })}
+            csvSlideCount={csvSlides.length}
             onOpenAddModal={() => setIsMediaModalOpen(true)}
             onOpenSettings={() => setIsSettingsOpen((prev) => !prev)}
             isSettingsOpen={isSettingsOpen}

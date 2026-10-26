@@ -4,7 +4,7 @@
 // ===================================================
 
 import React from 'react';
-import type { DisplayMode, Playlist, WidgetSize } from '../types';
+import type { DisplayMode, Playlist, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
 import { useClock } from '../hooks/useClock';
 import './HeaderHUD.css';
@@ -15,6 +15,9 @@ interface HeaderHUDProps {
   playlists: Playlist[];
   activePlaylistId: string | null;
   onPlaylistChange: (id: string | null) => void;
+  mediaSourceMode: MediaSourceMode;
+  onMediaSourceChange: (mode: MediaSourceMode) => void;
+  csvSlideCount?: number;
   onOpenAddModal: () => void;
   onOpenSettings: () => void;
   isSettingsOpen?: boolean;
@@ -31,6 +34,9 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   playlists,
   activePlaylistId,
   onPlaylistChange,
+  mediaSourceMode,
+  onMediaSourceChange,
+  csvSlideCount = 0,
   onOpenAddModal,
   onOpenSettings,
   isSettingsOpen = false,
@@ -41,6 +47,30 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   pomodoroMode,
 }) => {
   const clock = useClock();
+
+  // 現在のセレクト値の計算
+  const currentSelectValue =
+    mediaSourceMode === 'csv'
+      ? 'src_csv'
+      : mediaSourceMode === 'hybrid'
+      ? 'src_hybrid'
+      : activePlaylistId || 'src_all_pl';
+
+  const handleSelectChange = (val: string) => {
+    if (val === 'src_csv') {
+      onMediaSourceChange('csv');
+      onPlaylistChange(null);
+    } else if (val === 'src_hybrid') {
+      onMediaSourceChange('hybrid');
+      onPlaylistChange(null);
+    } else if (val === 'src_all_pl') {
+      onMediaSourceChange('playlist');
+      onPlaylistChange(null);
+    } else {
+      onMediaSourceChange('playlist');
+      onPlaylistChange(val);
+    }
+  };
 
   return (
     <header className="hud-header" data-tauri-drag-region>
@@ -55,20 +85,28 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
         </div>
       </div>
 
-      {/* 中央: プレイリスト選択 & クイック追加 */}
+      {/* 中央: メディアソース & プレイリスト選択 & クイック追加 */}
       <div className="header-playlist-bar">
         <select
           className="hud-select playlist-select"
-          value={activePlaylistId || ''}
-          onChange={(e) => onPlaylistChange(e.target.value || null)}
-          title="再生プレイリストを選択"
+          value={currentSelectValue}
+          onChange={(e) => handleSelectChange(e.target.value)}
+          title="再生ソース・プレイリストを選択"
         >
-          <option value="">📁 全プレイリスト</option>
-          {playlists.map((pl) => (
-            <option key={pl.id} value={pl.id}>
-              {pl.name} ({pl.itemCount})
-            </option>
-          ))}
+          <optgroup label="── ソース統合 ──">
+            <option value="src_hybrid">🔀 ハイブリッド (全部)</option>
+            <option value="src_csv">📊 Google Sheets ({csvSlideCount}枚)</option>
+            <option value="src_all_pl">📁 Xプレイリスト全件</option>
+          </optgroup>
+          {playlists.length > 0 && (
+            <optgroup label="── X プレイリスト ──">
+              {playlists.map((pl) => (
+                <option key={pl.id} value={pl.id}>
+                  {pl.name} ({pl.itemCount})
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
 
         <button
