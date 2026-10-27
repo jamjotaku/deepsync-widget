@@ -2,7 +2,6 @@ package com.deepsync.widget
 
 import android.os.Bundle
 import android.webkit.WebView
-import app.tauri.TauriActivity
 
 class MainActivity : TauriActivity() {
 

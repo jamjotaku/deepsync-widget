@@ -63,10 +63,12 @@ object WidgetImageHelper {
             return list
         }
 
-        // デフォルトフォールバック
+        // デフォルトフォールバック: 美麗な写真URL（自動フェッチ）と内蔵グラフィック
         return listOf(
-            WidgetSlide("res://slide_1", "NEO-TOKYO // CYBERPUNK 2088", isCustom = false),
-            WidgetSlide("res://slide_2", "ORBITAL TELEMETRY // SECTOR-07", isCustom = false)
+            WidgetSlide("https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800", "CYBERPUNK // NIGHT CITY"),
+            WidgetSlide("https://images.unsplash.com/photo-1509198397868-475647b2a1e5?q=80&w=800", "NEURAL STREAM // MATRIX"),
+            WidgetSlide("res://slide_1", "TACTICAL TELEMETRY STREAM", isCustom = false),
+            WidgetSlide("res://slide_2", "SYNCHRONIZED // REALTIME", isCustom = false)
         )
     }
 
