@@ -1,8 +1,11 @@
 package com.deepsync.widget
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.webkit.JavascriptInterface
+import android.widget.Toast
 import org.json.JSONArray
 import java.io.File
 import kotlin.concurrent.thread
@@ -18,20 +21,28 @@ class WidgetBridge(private val context: Context) {
     }
 
     @JavascriptInterface
-    fun syncSlides(slidesJson: String) {
+    fun syncSlides(slidesJson: String): Boolean {
         Log.d(TAG, "Received slides from Web: ${slidesJson.take(150)}...")
-        try {
-            val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().putString(WidgetImageHelper.KEY_CUSTOM_SLIDES, slidesJson).apply()
+        return try {
+            val array = JSONArray(slidesJson)
+            val count = array.length()
 
-            // バックグラウンドで画像キャッシュを事前ダウンロード
+            // 1. 同期的に即時保存 (commit)
+            val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(WidgetImageHelper.KEY_CUSTOM_SLIDES, slidesJson).commit()
+
+            // 2. 画面に確認トーストを表示
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "ウィジェット同期完了: ${count}枚の写真を反映しました", Toast.LENGTH_SHORT).show()
+            }
+
+            // 3. バックグラウンドで直近の画像を高速プリフェッチ
             thread {
                 try {
                     val cacheDir = File(context.filesDir, "widget_cache")
                     if (!cacheDir.exists()) cacheDir.mkdirs()
 
-                    val array = JSONArray(slidesJson)
-                    val limit = Math.min(array.length(), 15) // 直近15枚を事前キャッシュ
+                    val limit = Math.min(count, 15) // 直近15枚を事前キャッシュ
                     for (i in 0 until limit) {
                         val obj = array.getJSONObject(i)
                         val url = obj.optString("url", "")
@@ -44,18 +55,24 @@ class WidgetBridge(private val context: Context) {
                         }
                     }
 
-                    // キャッシュ完了後に全ウィジェットを更新
-                    WidgetImageHelper.notifyAllWidgets(context)
+                    // キャッシュ完了後に全ウィジェットを直接再描画
+                    Handler(Looper.getMainLooper()).post {
+                        WidgetImageHelper.notifyAllWidgets(context)
+                    }
                 } catch (t: Throwable) {
                     Log.e(TAG, "Error in preloading slides", t)
                 }
             }
 
-            // 即座にも一度通知
-            WidgetImageHelper.notifyAllWidgets(context)
+            // 4. 即座に全ウィジェットを直接再描画（テキストやカウンターを即時反映）
+            Handler(Looper.getMainLooper()).post {
+                WidgetImageHelper.notifyAllWidgets(context)
+            }
 
+            true
         } catch (t: Throwable) {
             Log.e(TAG, "syncSlides failed", t)
+            false
         }
     }
 }

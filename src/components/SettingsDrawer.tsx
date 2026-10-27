@@ -8,6 +8,7 @@ import { FilterPanel } from './FilterPanel';
 import { setWidgetSize, setAlwaysOnTop, setWindowPositionPreset } from '../lib/windowManager';
 import { toggleFullscreen } from '../lib/wakeLock';
 import { getSupabaseConfig, setSupabaseConfig, cloudSync, isCloudSyncEnabled } from '../lib/supabase';
+import { getStoredItems } from '../lib/playlistStorage';
 import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
 import { WIDGET_SIZES } from '../types';
 import type { FeedSourceConfig } from '../hooks/useFeedReader';
@@ -56,10 +57,39 @@ export function SettingsDrawer({
   const [supabaseKey, setSupabaseKey] = useState(() => getSupabaseConfig().anonKey);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [isTestingSync, setIsTestingSync] = useState(false);
+  const [widgetSyncMsg, setWidgetSyncMsg] = useState<string | null>(null);
+
+  const handleSyncToWidget = () => {
+    if (typeof window === 'undefined') return;
+    if (!window.DeepSyncWidgetBridge) {
+      setWidgetSyncMsg('⚠️ Androidウィジェット連携ブリッジが未検出です（PCブラウザまたは初期化前）');
+      setTimeout(() => setWidgetSyncMsg(null), 5000);
+      return;
+    }
+    const stored = getStoredItems();
+    if (!stored || stored.length === 0) {
+      setWidgetSyncMsg('⚠️ 同期する写真が0枚です。先に写真を追加またはクラウド同期してください。');
+      setTimeout(() => setWidgetSyncMsg(null), 4000);
+      return;
+    }
+    try {
+      const payload = stored.map((item) => ({
+        url: item.imageUrl,
+        caption: item.text || item.authorName || 'DeepSync Stream',
+      }));
+      window.DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
+      setWidgetSyncMsg(`✅ ${payload.length}枚の写真をホーム画面ウィジェットに同期しました！`);
+      setTimeout(() => setWidgetSyncMsg(null), 5000);
+    } catch (e: any) {
+      setWidgetSyncMsg(`❌ 同期失敗: ${e?.message || e}`);
+      setTimeout(() => setWidgetSyncMsg(null), 5000);
+    }
+  };
 
   const handleSaveSupabase = () => {
     setSupabaseConfig(supabaseUrl, supabaseKey);
-    setSyncStatusMsg('接続設定を保存しました。');
+    setSyncStatusMsg('接続設定を保存しました。ウィジェットにも同期します...');
+    handleSyncToWidget();
     setTimeout(() => setSyncStatusMsg(null), 3000);
   };
 
@@ -499,6 +529,36 @@ export function SettingsDrawer({
                 }}
               >
                 {syncStatusMsg}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Android ホーム画面ウィジェット連携 ── */}
+        <div className="settings-section">
+          <div className="settings-section__title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>📱</span> ANDROID ウィジェット連携
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <button
+              className="hud-btn hud-btn-accent"
+              style={{ width: '100%', padding: '6px 0', fontSize: '11px', justifyContent: 'center' }}
+              onClick={handleSyncToWidget}
+            >
+              🔄 ホーム画面ウィジェットに同期する
+            </button>
+            {widgetSyncMsg && (
+              <div
+                style={{
+                  fontSize: '10px',
+                  padding: '5px 8px',
+                  borderRadius: '3px',
+                  background: widgetSyncMsg.startsWith('✅') ? 'rgba(0, 242, 255, 0.15)' : 'rgba(255, 0, 127, 0.15)',
+                  border: `1px solid ${widgetSyncMsg.startsWith('✅') ? 'rgba(0, 242, 255, 0.4)' : 'rgba(255, 0, 127, 0.4)'}`,
+                  color: widgetSyncMsg.startsWith('✅') ? '#00f2ff' : '#ff007f',
+                }}
+              >
+                {widgetSyncMsg}
               </div>
             )}
           </div>

@@ -3,15 +3,15 @@ package com.deepsync.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
-import android.graphics.Rect
 import android.graphics.RectF
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import org.json.JSONArray
 import java.io.File
@@ -37,7 +37,7 @@ object WidgetImageHelper {
 
     /**
      * 登録済みのスライド一覧を取得
-     * ユーザー追加のスライドがあればそれを優先、無ければ内蔵デフォルトを返す
+     * ユーザー追加のスライドがあればそれを最優先、無ければ内蔵デフォルトを返す
      */
     fun getSlides(context: Context): List<WidgetSlide> {
         val list = mutableListOf<WidgetSlide>()
@@ -115,7 +115,9 @@ object WidgetImageHelper {
             // キャッシュが無ければバックグラウンドで安全にフェッチ
             thread {
                 fetchAndSaveImage(context, slide.url, file) {
-                    onFetchComplete()
+                    Handler(Looper.getMainLooper()).post {
+                        onFetchComplete()
+                    }
                 }
             }
         } catch (t: Throwable) {
@@ -133,8 +135,8 @@ object WidgetImageHelper {
             val conn = url.openConnection() as HttpURLConnection
             conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
             conn.setRequestProperty("Accept", "image/*")
-            conn.connectTimeout = 8000
-            conn.readTimeout = 8000
+            conn.connectTimeout = 10000
+            conn.readTimeout = 10000
             conn.connect()
 
             if (conn.responseCode == 200) {
@@ -179,12 +181,11 @@ object WidgetImageHelper {
         val srcW = source.width
         val srcH = source.height
 
-        // クロップ比率計算
         val scale = Math.max(targetWidth.toFloat() / srcW, targetHeight.toFloat() / srcH)
         val cropW = (targetWidth / scale).toInt()
         val cropH = (targetHeight / scale).toInt()
         val cropX = Math.max(0, (srcW - cropW) / 2)
-        val cropY = Math.max(0, (srcH - cropH) / 2)
+        val cropY = Math.max(0, (srcH - cropY) / 2)
 
         val cropped = Bitmap.createBitmap(source, cropX, cropY, Math.min(cropW, srcW - cropX), Math.min(cropH, srcH - cropY))
         val scaled = Bitmap.createScaledBitmap(cropped, targetWidth, targetHeight, true)
@@ -205,29 +206,32 @@ object WidgetImageHelper {
     }
 
     /**
-     * 全ウィジェットの一括更新通知
+     * 全ウィジェットの直接再描画（ブロードキャストではなく直接呼び出しで 100% 確実に即時反映）
      */
     fun notifyAllWidgets(context: Context) {
         try {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val providers = listOf(
-                DeepSyncWidgetProvider::class.java,
-                DeepSyncPhotoWidgetProvider::class.java,
-                DeepSyncNanoWidgetProvider::class.java
-            )
-            for (p in providers) {
-                val cn = ComponentName(context, p)
-                val ids = appWidgetManager.getAppWidgetIds(cn)
-                if (ids.isNotEmpty()) {
-                    val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
-                        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-                        component = cn
-                    }
-                    context.sendBroadcast(intent)
-                }
+
+            // 1. HUD 3x2 ウィジェット更新
+            val hudIds = appWidgetManager.getAppWidgetIds(ComponentName(context, DeepSyncWidgetProvider::class.java))
+            for (id in hudIds) {
+                DeepSyncWidgetProvider.updateWidget(context, appWidgetManager, id)
             }
+
+            // 2. Photo Frame 4x3 ウィジェット更新
+            val photoIds = appWidgetManager.getAppWidgetIds(ComponentName(context, DeepSyncPhotoWidgetProvider::class.java))
+            for (id in photoIds) {
+                DeepSyncPhotoWidgetProvider.updateWidget(context, appWidgetManager, id)
+            }
+
+            // 3. Nano Bar 4x1 ウィジェット更新
+            val nanoIds = appWidgetManager.getAppWidgetIds(ComponentName(context, DeepSyncNanoWidgetProvider::class.java))
+            for (id in nanoIds) {
+                DeepSyncNanoWidgetProvider.updateWidget(context, appWidgetManager, id)
+            }
+            Log.d(TAG, "Directly updated widgets: HUD(${hudIds.size}), Photo(${photoIds.size}), Nano(${nanoIds.size})")
         } catch (t: Throwable) {
-            Log.e(TAG, "notifyAllWidgets error", t)
+            Log.e(TAG, "notifyAllWidgets direct call error", t)
         }
     }
 }

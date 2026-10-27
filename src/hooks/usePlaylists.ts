@@ -90,24 +90,43 @@ export function usePlaylists(initialActiveId: string | null = null) {
     };
   }, [syncWithCloud]);
 
-  // ── Android Home Screen Widget への自動データ同期 ──
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.DeepSyncWidgetBridge) {
-      try {
-        const targetItems = currentItems.length > 0 ? currentItems : items;
-        if (targetItems.length > 0) {
-          const payload = targetItems.map((item) => ({
-            url: item.imageUrl,
-            caption: item.text || item.authorName || 'DeepSync Stream',
-          }));
-          window.DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
-          console.log('[usePlaylists] Synced', payload.length, 'slides to Android Widget');
-        }
-      } catch (e) {
-        console.warn('[usePlaylists] Failed to sync with Android Widget Bridge:', e);
-      }
+  // ── Android Home Screen Widget への同期関数 ──
+  const pushToWidget = useCallback((): { success: boolean; count: number; message: string } => {
+    if (typeof window === 'undefined') {
+      return { success: false, count: 0, message: 'Window環境ではありません' };
+    }
+    if (!window.DeepSyncWidgetBridge) {
+      return { success: false, count: 0, message: 'Androidウィジェットブリッジが検出されません' };
+    }
+    const targetItems = currentItems.length > 0 ? currentItems : items;
+    if (targetItems.length === 0) {
+      return { success: false, count: 0, message: '同期する写真がありません' };
+    }
+    try {
+      const payload = targetItems.map((item) => ({
+        url: item.imageUrl,
+        caption: item.text || item.authorName || 'DeepSync Stream',
+      }));
+      window.DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
+      console.log('[usePlaylists] Manually synced', payload.length, 'slides to Android Widget');
+      return { success: true, count: payload.length, message: `${payload.length}枚の写真をウィジェットに同期しました` };
+    } catch (e: any) {
+      console.warn('[usePlaylists] Widget sync failed:', e);
+      return { success: false, count: 0, message: `同期エラー: ${e?.message || e}` };
     }
   }, [currentItems, items]);
+
+  // ── Android Home Screen Widget への自動データ同期 (即時 + リトライ) ──
+  useEffect(() => {
+    pushToWidget();
+    // WebViewインジェクション遅延を考慮したリトライ
+    const t1 = setTimeout(pushToWidget, 1500);
+    const t2 = setTimeout(pushToWidget, 4000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [pushToWidget]);
 
   // 新規プレイリスト作成
   const createPlaylist = useCallback((name: string, description?: string) => {
@@ -294,5 +313,6 @@ export function usePlaylists(initialActiveId: string | null = null) {
     downloadBackup,
     restoreBackup,
     refreshFromStorage,
+    pushToWidget,
   };
 }
