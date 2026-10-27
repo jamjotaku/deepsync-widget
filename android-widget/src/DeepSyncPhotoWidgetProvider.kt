@@ -70,14 +70,14 @@ class DeepSyncPhotoWidgetProvider : AppWidgetProvider() {
             views.setTextViewText(R.id.widget_pomodoro, "CHRONO // 25:00 [FOCUS]")
             views.setTextViewText(R.id.widget_caption, slide.caption)
 
-            // 2. 大画面画像のロード (アスペクト比維持 fitMode=true で見切れ防止)
+            // 2. 大画面画像のロード (顔中心スマートクロップ useFaceCrop=true で顔見切れ防止)
             val bitmap = WidgetImageHelper.loadSlideBitmap(
                 context,
                 slide,
                 targetWidth = 540,
                 targetHeight = 420,
                 cornerRadius = 14f,
-                fitMode = true
+                useFaceCrop = true
             ) {
                 try {
                     val mgr = AppWidgetManager.getInstance(context)

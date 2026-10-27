@@ -90,5 +90,4 @@ class WidgetBridge(private val context: Context) {
             false
         }
     }
-    }
 }
