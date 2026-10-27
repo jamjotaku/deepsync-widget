@@ -185,7 +185,7 @@ object WidgetImageHelper {
         val cropW = (targetWidth / scale).toInt()
         val cropH = (targetHeight / scale).toInt()
         val cropX = Math.max(0, (srcW - cropW) / 2)
-        val cropY = Math.max(0, (srcH - cropY) / 2)
+        val cropY = Math.max(0, (srcH - cropH) / 2)
 
         val cropped = Bitmap.createBitmap(source, cropX, cropY, Math.min(cropW, srcW - cropX), Math.min(cropH, srcH - cropY))
         val scaled = Bitmap.createScaledBitmap(cropped, targetWidth, targetHeight, true)
