@@ -9,7 +9,7 @@ import { setWidgetSize, setAlwaysOnTop, setWindowPositionPreset } from '../lib/w
 import { toggleFullscreen } from '../lib/wakeLock';
 import { getSupabaseConfig, setSupabaseConfig, cloudSync, isCloudSyncEnabled } from '../lib/supabase';
 import { getStoredItems } from '../lib/playlistStorage';
-import type { AppSettings, WidgetSize, MediaSourceMode } from '../types';
+import type { AppSettings, WidgetSize, MediaSourceMode, SlideData } from '../types';
 import { WIDGET_SIZES } from '../types';
 import type { FeedSourceConfig } from '../hooks/useFeedReader';
 import '../styles/settings.css';
@@ -25,6 +25,7 @@ interface SettingsDrawerProps {
   onToggleFeedSource?: (id: string) => void;
   onAddFeedSource?: (name: string, url: string, badge?: string) => void;
   onRemoveFeedSource?: (id: string) => void;
+  currentSlides?: SlideData[];
 }
 
 const SIZE_KEYS: WidgetSize[] = ['small', 'medium', 'large', 'wide', 'expanded'];
@@ -40,6 +41,7 @@ export function SettingsDrawer({
   onToggleFeedSource,
   onAddFeedSource,
   onRemoveFeedSource,
+  currentSlides = [],
 }: SettingsDrawerProps) {
   const handleSizeChange = async (size: WidgetSize) => {
     onSettingsChange({ widgetSize: size });
@@ -58,6 +60,8 @@ export function SettingsDrawer({
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
   const [isTestingSync, setIsTestingSync] = useState(false);
   const [widgetSyncMsg, setWidgetSyncMsg] = useState<string | null>(null);
+  const [isImportingToCloud, setIsImportingToCloud] = useState(false);
+  const [cloudImportMsg, setCloudImportMsg] = useState<string | null>(null);
 
   const handleSyncToWidget = () => {
     if (typeof window === 'undefined') return;
@@ -66,24 +70,52 @@ export function SettingsDrawer({
       setTimeout(() => setWidgetSyncMsg(null), 5000);
       return;
     }
-    const stored = getStoredItems();
-    if (!stored || stored.length === 0) {
-      setWidgetSyncMsg('⚠️ 同期する写真が0枚です。先に写真を追加またはクラウド同期してください。');
+
+    // 1. 現在表示中のスライド (Google Sheets CSV / プレイリスト: 124枚) を最優先
+    let payload: Array<{ url: string; caption: string }> = [];
+    if (currentSlides && currentSlides.length > 0) {
+      payload = currentSlides.map((s) => ({
+        url: s.imageUrl,
+        caption: s.caption || s.displayName || s.character || 'DeepSync Stream',
+      }));
+    } else {
+      const stored = getStoredItems();
+      if (stored && stored.length > 0) {
+        payload = stored.map((item) => ({
+          url: item.imageUrl,
+          caption: item.text || item.authorName || 'DeepSync Stream',
+        }));
+      }
+    }
+
+    if (payload.length === 0) {
+      setWidgetSyncMsg('⚠️ 同期する写真が0枚です。先に写真を追加またはCSVを読み込んでください。');
       setTimeout(() => setWidgetSyncMsg(null), 4000);
       return;
     }
+
     try {
-      const payload = stored.map((item) => ({
-        url: item.imageUrl,
-        caption: item.text || item.authorName || 'DeepSync Stream',
-      }));
       window.DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
-      setWidgetSyncMsg(`✅ ${payload.length}枚の写真をホーム画面ウィジェットに同期しました！`);
+      setWidgetSyncMsg(`✅ ${payload.length}枚の写真（スライドショー全画像）をウィジェットに同期しました！`);
       setTimeout(() => setWidgetSyncMsg(null), 5000);
     } catch (e: any) {
       setWidgetSyncMsg(`❌ 同期失敗: ${e?.message || e}`);
       setTimeout(() => setWidgetSyncMsg(null), 5000);
     }
+  };
+
+  const handleImportToCloud = async () => {
+    if (!currentSlides || currentSlides.length === 0) {
+      setCloudImportMsg('⚠️ クラウドに保存するスライドがありません。');
+      setTimeout(() => setCloudImportMsg(null), 3000);
+      return;
+    }
+    setIsImportingToCloud(true);
+    setCloudImportMsg('☁️ Google Sheets 写真を Supabase に一括保存中...');
+    const res = await cloudSync.importSlidesToCloud(currentSlides);
+    setIsImportingToCloud(false);
+    setCloudImportMsg(res.message);
+    setTimeout(() => setCloudImportMsg(null), 5000);
   };
 
   const handleSaveSupabase = () => {
@@ -516,6 +548,34 @@ export function SettingsDrawer({
               </button>
             </div>
 
+            {/* Google Sheets 写真を Supabase クラウドへ一括インポート */}
+            {currentSlides.length > 0 && (
+              <button
+                className="hud-btn"
+                style={{ width: '100%', marginTop: '6px', padding: '5px 0', fontSize: '10px', justifyContent: 'center', borderColor: '#00f2ff' }}
+                onClick={handleImportToCloud}
+                disabled={isImportingToCloud}
+              >
+                {isImportingToCloud ? '☁️ 保存中...' : `☁️ Google Sheets 写真 (${currentSlides.length}枚) を Supabase に保存`}
+              </button>
+            )}
+
+            {cloudImportMsg && (
+              <div
+                style={{
+                  fontSize: '10px',
+                  padding: '4px 8px',
+                  borderRadius: '3px',
+                  marginTop: '4px',
+                  background: cloudImportMsg.includes('保存しました') ? 'rgba(0, 242, 255, 0.15)' : 'rgba(255, 0, 127, 0.15)',
+                  border: `1px solid ${cloudImportMsg.includes('保存しました') ? 'rgba(0, 242, 255, 0.4)' : 'rgba(255, 0, 127, 0.4)'}`,
+                  color: cloudImportMsg.includes('保存しました') ? '#00f2ff' : '#ff007f',
+                }}
+              >
+                {cloudImportMsg}
+              </div>
+            )}
+
             {syncStatusMsg && (
               <div
                 style={{
@@ -545,7 +605,7 @@ export function SettingsDrawer({
               style={{ width: '100%', padding: '6px 0', fontSize: '11px', justifyContent: 'center' }}
               onClick={handleSyncToWidget}
             >
-              🔄 ホーム画面ウィジェットに同期する
+              🔄 ホーム画面ウィジェットに同期する ({currentSlides.length > 0 ? `${currentSlides.length}枚` : '0枚'})
             </button>
             {widgetSyncMsg && (
               <div

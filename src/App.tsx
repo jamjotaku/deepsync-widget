@@ -136,6 +136,22 @@ export default function App() {
     return playlistSlides.length > 0 ? playlistSlides : csvSlides;
   }, [settings.mediaSourceMode, playlistSlides, csvSlides]);
 
+  // ── Android Home Screen Widget へ現在表示中のスライド（CSV含む全画像）を自動同期 ──
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).DeepSyncWidgetBridge && combinedSlides.length > 0) {
+      try {
+        const payload = combinedSlides.map((s) => ({
+          url: s.imageUrl,
+          caption: s.caption || s.displayName || s.character || 'DeepSync Stream',
+        }));
+        (window as any).DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
+        console.log('[App] Auto-synced combinedSlides to Android Widget:', payload.length);
+      } catch (e) {
+        console.warn('[App] Failed to auto-sync to Android Widget:', e);
+      }
+    }
+  }, [combinedSlides]);
+
   // ── スライド間隔（ポモドーロ連動） ──
   const effectiveInterval = useMemo(() => {
     if (pomodoro.mode === 'break') {
@@ -361,6 +377,7 @@ export default function App() {
             onToggleFeedSource={toggleFeedSource}
             onAddFeedSource={addFeedSource}
             onRemoveFeedSource={removeFeedSource}
+            currentSlides={combinedSlides}
           />
 
           {/* ── サイバーパンク ホログラムHUDトースト ── */}

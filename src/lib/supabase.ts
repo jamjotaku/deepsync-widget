@@ -4,7 +4,7 @@
 // ===================================================
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Playlist, PlaylistItem } from '../types';
+import type { Playlist, PlaylistItem, SlideData } from '../types';
 
 const STORAGE_KEY_URL = 'deepsync_supabase_url_v1';
 const STORAGE_KEY_KEY = 'deepsync_supabase_key_v1';
@@ -214,6 +214,62 @@ export const cloudSync = {
     } catch (err) {
       console.error('[CloudSync] deletePlaylistItem failed:', err);
       return false;
+    }
+  },
+
+  /**
+   * Google Sheets / CSV スライドを一括で Supabase クラウドに保存
+   */
+  async importSlidesToCloud(
+    slides: SlideData[],
+    playlistName = 'Google Sheets 連携'
+  ): Promise<{ success: boolean; count: number; message: string }> {
+    const supabase = getSupabase();
+    if (!supabase) {
+      return { success: false, count: 0, message: 'Supabase が未接続です。' };
+    }
+    if (!slides || slides.length === 0) {
+      return { success: false, count: 0, message: '保存するスライドがありません。' };
+    }
+
+    try {
+      const playlistId = `pl_csv_${Date.now()}`;
+      // 1. プレイリスト作成
+      const { error: plError } = await supabase.from('playlists').upsert({
+        id: playlistId,
+        name: playlistName,
+        description: 'Google Sheets CSVからインポートされたスライド',
+        created_at: new Date().toISOString(),
+      });
+      if (plError) throw plError;
+
+      // 2. アイテム一括挿入 (50件ずつバッチ)
+      const itemsToInsert = slides.map((s, idx) => ({
+        id: `item_csv_${Date.now()}_${idx}`,
+        playlist_id: playlistId,
+        image_url: s.imageUrl,
+        source_url: s.sourceLink || '',
+        author_name: s.displayName || s.character || '',
+        author_handle: '',
+        caption: s.caption || '',
+        sort_order: idx,
+        created_at: new Date().toISOString(),
+      }));
+
+      const batchSize = 50;
+      for (let i = 0; i < itemsToInsert.length; i += batchSize) {
+        const batch = itemsToInsert.slice(i, i + batchSize);
+        const { error: itemError } = await supabase.from('playlist_items').upsert(batch);
+        if (itemError) throw itemError;
+      }
+
+      return {
+        success: true,
+        count: itemsToInsert.length,
+        message: `${itemsToInsert.length}枚の写真を Supabase クラウドに保存しました！`,
+      };
+    } catch (err: any) {
+      return { success: false, count: 0, message: `クラウド保存エラー: ${err.message || err}` };
     }
   },
 
