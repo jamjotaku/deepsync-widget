@@ -12,6 +12,7 @@ import com.deepsync.widget.R
 
 /**
  * DeepSync Nano Bar — Android Slim Widget Provider (4x1 / 2x1)
+ * スリムバー・サムネイル・キャッシュ対応
  */
 class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
 
@@ -33,9 +34,9 @@ class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         try {
             if (intent.action == ACTION_NEXT_NANO) {
-                val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                val currentIndex = prefs.getInt(KEY_NANO_INDEX, 0)
-                prefs.edit().putInt(KEY_NANO_INDEX, currentIndex + 1).apply()
+                val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
+                val currentIndex = prefs.getInt(WidgetImageHelper.KEY_INDEX, 0)
+                prefs.edit().putInt(WidgetImageHelper.KEY_INDEX, currentIndex + 1).apply()
 
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 val thisWidget = ComponentName(context, DeepSyncNanoWidgetProvider::class.java)
@@ -51,24 +52,38 @@ class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_NEXT_NANO = "com.deepsync.widget.ACTION_NEXT_NANO"
-        private const val PREFS_NAME = "deepsync_nano_prefs"
-        private const val KEY_NANO_INDEX = "nano_slide_index"
-
-        private val THUMBS = listOf(
-            R.drawable.slide_1,
-            R.drawable.slide_2
-        )
 
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_nano_layout)
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
 
-            val currentIndex = prefs.getInt(KEY_NANO_INDEX, 0)
-            val thumbRes = THUMBS[Math.abs(currentIndex) % THUMBS.size]
+            val slides = WidgetImageHelper.getSlides(context)
+            val currentIndex = prefs.getInt(WidgetImageHelper.KEY_INDEX, 0)
+            val slide = slides[Math.abs(currentIndex) % slides.size]
 
-            views.setImageViewResource(R.id.widget_image, thumbRes)
+            // 1. サムネイル画像のロード (64x64)
+            val bitmap = WidgetImageHelper.loadSlideBitmap(
+                context,
+                slide,
+                targetWidth = 80,
+                targetHeight = 80,
+                cornerRadius = 8f
+            ) {
+                try {
+                    val mgr = AppWidgetManager.getInstance(context)
+                    updateWidget(context, mgr, appWidgetId)
+                } catch (t: Throwable) {
+                    Log.e("DeepSyncNanoWidget", "callback update failed", t)
+                }
+            }
 
-            // サムネイルタップで次の画像へ
+            if (bitmap != null) {
+                views.setImageViewBitmap(R.id.widget_image, bitmap)
+            } else {
+                views.setImageViewResource(R.id.widget_image, R.drawable.slide_1)
+            }
+
+            // 2. サムネイルタップで「次の写真」へ切り替え
             val nextIntent = Intent(context, DeepSyncNanoWidgetProvider::class.java).apply {
                 action = ACTION_NEXT_NANO
             }
@@ -80,7 +95,7 @@ class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_image, pendingNext)
 
-            // 時計・タイマータップでアプリ起動
+            // 3. 右側（時計・ポモドーロ）タップでアプリ本体を起動
             try {
                 val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 if (launchIntent != null) {

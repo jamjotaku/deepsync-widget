@@ -17,6 +17,14 @@ import {
 import { fetchTweetMedia, extractTweetUrls } from '../lib/twitterExtractor';
 import { cloudSync, isCloudSyncEnabled } from '../lib/supabase';
 
+declare global {
+  interface Window {
+    DeepSyncWidgetBridge?: {
+      syncSlides: (json: string) => void;
+    };
+  }
+}
+
 export function usePlaylists(initialActiveId: string | null = null) {
   const [playlists, setPlaylists] = useState<Playlist[]>(() => getStoredPlaylists());
   const [items, setItems] = useState<PlaylistItem[]>(() => getStoredItems());
@@ -81,6 +89,25 @@ export function usePlaylists(initialActiveId: string | null = null) {
       if (unsubscribe) unsubscribe();
     };
   }, [syncWithCloud]);
+
+  // ── Android Home Screen Widget への自動データ同期 ──
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.DeepSyncWidgetBridge) {
+      try {
+        const targetItems = currentItems.length > 0 ? currentItems : items;
+        if (targetItems.length > 0) {
+          const payload = targetItems.map((item) => ({
+            url: item.imageUrl,
+            caption: item.text || item.authorName || 'DeepSync Stream',
+          }));
+          window.DeepSyncWidgetBridge.syncSlides(JSON.stringify(payload));
+          console.log('[usePlaylists] Synced', payload.length, 'slides to Android Widget');
+        }
+      } catch (e) {
+        console.warn('[usePlaylists] Failed to sync with Android Widget Bridge:', e);
+      }
+    }
+  }, [currentItems, items]);
 
   // 新規プレイリスト作成
   const createPlaylist = useCallback((name: string, description?: string) => {

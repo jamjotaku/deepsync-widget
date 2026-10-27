@@ -24,13 +24,22 @@ cp -f android-widget/res/layout/*.xml "$ANDROID_APP_DIR/res/layout/"
 cp -f android-widget/res/xml/*.xml "$ANDROID_APP_DIR/res/xml/"
 cp -f android-widget/res/drawable/* "$ANDROID_APP_DIR/res/drawable/"
 
-# Kotlin ソースコードのコピー
-PACKAGE_DIR="$ANDROID_APP_DIR/java/com/deepsync/widget"
-if [ ! -d "$PACKAGE_DIR" ]; then
-    PACKAGE_DIR="$ANDROID_APP_DIR/kotlin/com/deepsync/widget"
+# Kotlin ソースコードのコピー (java / kotlin 両対応)
+COPIED=false
+for DIR in "$ANDROID_APP_DIR/java/com/deepsync/widget" "$ANDROID_APP_DIR/kotlin/com/deepsync/widget"; do
+    if [ -d "$(dirname "$DIR")" ]; then
+        mkdir -p "$DIR"
+        cp -f android-widget/src/*.kt "$DIR/"
+        echo "[Widget Injector] Copied Kotlin sources to $DIR"
+        COPIED=true
+    fi
+done
+
+if [ "$COPIED" = false ]; then
+    mkdir -p "$ANDROID_APP_DIR/java/com/deepsync/widget"
+    cp -f android-widget/src/*.kt "$ANDROID_APP_DIR/java/com/deepsync/widget/"
+    echo "[Widget Injector] Fallback: Copied Kotlin sources to $ANDROID_APP_DIR/java/com/deepsync/widget"
 fi
-mkdir -p "$PACKAGE_DIR"
-cp -f android-widget/src/*.kt "$PACKAGE_DIR/"
 
 # AndroidManifest.xml の安全な書き換え (Python)
 MANIFEST_FILE="$ANDROID_APP_DIR/AndroidManifest.xml"

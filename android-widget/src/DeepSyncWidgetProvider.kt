@@ -11,8 +11,8 @@ import android.widget.RemoteViews
 import com.deepsync.widget.R
 
 /**
- * DeepSync HUD — Android Home Screen Widget Provider (3x2)
- * 超堅牢・絶対クラッシュしない実装
+ * DeepSync HUD — Android Standard Widget Provider (3x2)
+ * ユーザー登録画像・キャッシュ・非同期フェッチ対応
  */
 class DeepSyncWidgetProvider : AppWidgetProvider() {
 
@@ -34,9 +34,9 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
         super.onReceive(context, intent)
         try {
             if (intent.action == ACTION_NEXT_IMAGE) {
-                val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                val currentIndex = prefs.getInt(KEY_INDEX, 0)
-                prefs.edit().putInt(KEY_INDEX, currentIndex + 1).apply()
+                val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
+                val currentIndex = prefs.getInt(WidgetImageHelper.KEY_INDEX, 0)
+                prefs.edit().putInt(WidgetImageHelper.KEY_INDEX, currentIndex + 1).apply()
 
                 val appWidgetManager = AppWidgetManager.getInstance(context)
                 val thisWidget = ComponentName(context, DeepSyncWidgetProvider::class.java)
@@ -52,27 +52,46 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val ACTION_NEXT_IMAGE = "com.deepsync.widget.ACTION_NEXT_IMAGE"
-        private const val PREFS_NAME = "deepsync_widget_prefs"
-        private const val KEY_INDEX = "widget_slide_index"
-
-        private val SLIDES = listOf(
-            Pair(R.drawable.slide_1, "HUD // STREAM ALPHA"),
-            Pair(R.drawable.slide_2, "HUD // STREAM BETA")
-        )
 
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val views = RemoteViews(context.packageName, R.layout.widget_hud_layout)
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val prefs = context.getSharedPreferences(WidgetImageHelper.PREFS_NAME, Context.MODE_PRIVATE)
 
-            val currentIndex = prefs.getInt(KEY_INDEX, 0)
-            val slide = SLIDES[Math.abs(currentIndex) % SLIDES.size]
+            val slides = WidgetImageHelper.getSlides(context)
+            val currentIndex = prefs.getInt(WidgetImageHelper.KEY_INDEX, 0)
+            val slide = slides[Math.abs(currentIndex) % slides.size]
+            val total = slides.size
+            val currentNum = (Math.abs(currentIndex) % total) + 1
 
-            // 1. 画像とテキストを安全かつ瞬時に設定
-            views.setImageViewResource(R.id.widget_image, slide.first)
-            views.setTextViewText(R.id.widget_caption, slide.second)
-            views.setTextViewText(R.id.widget_badge, "HUD // DEEPSYNC [${(Math.abs(currentIndex) % SLIDES.size) + 1}/${SLIDES.size}]")
+            // 1. テキスト・バッジ設定
+            views.setTextViewText(R.id.widget_badge, "HUD // DEEPSYNC [$currentNum/$total]")
+            views.setTextViewText(R.id.widget_caption, slide.caption)
 
-            // 2. 画像タップで次の画像へ
+            // 2. 画像の安全なロード（キャッシュ/フェッチ）
+            val bitmap = WidgetImageHelper.loadSlideBitmap(
+                context,
+                slide,
+                targetWidth = 140,
+                targetHeight = 140,
+                cornerRadius = 14f
+            ) {
+                // 非同期フェッチ完了時に再描画
+                try {
+                    val mgr = AppWidgetManager.getInstance(context)
+                    updateWidget(context, mgr, appWidgetId)
+                } catch (t: Throwable) {
+                    Log.e("DeepSyncWidget", "callback update failed", t)
+                }
+            }
+
+            if (bitmap != null) {
+                views.setImageViewBitmap(R.id.widget_image, bitmap)
+            } else {
+                // フォールバック表示
+                views.setImageViewResource(R.id.widget_image, R.drawable.slide_1)
+            }
+
+            // 3. 画像タップで「次の写真」へ切り替え
             val nextIntent = Intent(context, DeepSyncWidgetProvider::class.java).apply {
                 action = ACTION_NEXT_IMAGE
             }
@@ -84,7 +103,7 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
             )
             views.setOnClickPendingIntent(R.id.widget_image, pendingNext)
 
-            // 3. 右側タップでアプリ本体を起動
+            // 4. 右側タップでアプリ本体を起動
             try {
                 val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
                 if (launchIntent != null) {

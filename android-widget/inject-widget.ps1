@@ -24,13 +24,24 @@ Copy-Item -Force "android-widget/res/layout/*.xml" "$androidAppDir/res/layout/"
 Copy-Item -Force "android-widget/res/xml/*.xml" "$androidAppDir/res/xml/"
 Copy-Item -Force "android-widget/res/drawable/*" "$androidAppDir/res/drawable/"
 
-# Kotlin ソースコードのコピー
-$packageDir = "$androidAppDir/java/com/deepsync/widget"
-if (-not (Test-Path $packageDir)) {
-    $packageDir = "$androidAppDir/kotlin/com/deepsync/widget"
+# Kotlin ソースコードのコピー (java / kotlin 両対応)
+$copied = $false
+foreach ($dir in @("$androidAppDir/java/com/deepsync/widget", "$androidAppDir/kotlin/com/deepsync/widget")) {
+    $parent = Split-Path $dir -Parent
+    if (Test-Path $parent) {
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        Copy-Item -Force "android-widget/src/*.kt" "$dir/"
+        Write-Host "[Widget Injector] Copied Kotlin sources to $dir"
+        $copied = $true
+    }
 }
-New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
-Copy-Item -Force "android-widget/src/*.kt" "$packageDir/"
+
+if (-not $copied) {
+    $fallbackDir = "$androidAppDir/java/com/deepsync/widget"
+    New-Item -ItemType Directory -Force -Path $fallbackDir | Out-Null
+    Copy-Item -Force "android-widget/src/*.kt" "$fallbackDir/"
+    Write-Host "[Widget Injector] Fallback: Copied Kotlin sources to $fallbackDir"
+}
 
 # AndroidManifest.xml の設定
 $manifestFile = "$androidAppDir/AndroidManifest.xml"
