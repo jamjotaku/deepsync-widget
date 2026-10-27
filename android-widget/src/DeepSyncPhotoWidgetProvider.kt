@@ -65,15 +65,17 @@ class DeepSyncPhotoWidgetProvider : AppWidgetProvider() {
 
             // 1. テキスト・バッジ設定
             views.setTextViewText(R.id.widget_badge, "PHOTO STREAM [$currentNum/$total]")
+            views.setTextViewText(R.id.widget_pomodoro, "CHRONO // 25:00 [FOCUS]")
             views.setTextViewText(R.id.widget_caption, slide.caption)
 
-            // 2. 大画面画像のロード (Binder 1MB 制限回避のため最大 480x360)
+            // 2. 大画面画像のロード (アスペクト比維持 fitMode=true で見切れ防止)
             val bitmap = WidgetImageHelper.loadSlideBitmap(
                 context,
                 slide,
-                targetWidth = 480,
-                targetHeight = 360,
-                cornerRadius = 18f
+                targetWidth = 540,
+                targetHeight = 420,
+                cornerRadius = 14f,
+                fitMode = true
             ) {
                 try {
                     val mgr = AppWidgetManager.getInstance(context)
@@ -114,6 +116,8 @@ class DeepSyncPhotoWidgetProvider : AppWidgetProvider() {
                     )
                     views.setOnClickPendingIntent(R.id.widget_clock, pendingLaunch)
                     views.setOnClickPendingIntent(R.id.widget_caption, pendingLaunch)
+                    views.setOnClickPendingIntent(R.id.widget_badge, pendingLaunch)
+                    views.setOnClickPendingIntent(R.id.widget_pomodoro, pendingLaunch)
                 }
             } catch (t: Throwable) {
                 Log.w("DeepSyncPhotoWidget", "Launch intent failed", t)

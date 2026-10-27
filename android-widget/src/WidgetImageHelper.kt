@@ -74,6 +74,7 @@ object WidgetImageHelper {
 
     /**
      * スライドの Bitmap を安全に取得（Binder 1MB制限対策・キャッシュ・非同期フェッチ）
+     * fitMode=true の場合はアスペクト比を維持して全景表示（見切れ防止）
      */
     fun loadSlideBitmap(
         context: Context,
@@ -81,6 +82,7 @@ object WidgetImageHelper {
         targetWidth: Int = 360,
         targetHeight: Int = 360,
         cornerRadius: Float = 16f,
+        fitMode: Boolean = false,
         onFetchComplete: () -> Unit
     ): Bitmap? {
         try {
@@ -91,7 +93,11 @@ object WidgetImageHelper {
                     inPreferredConfig = Bitmap.Config.RGB_565
                 }
                 val original = BitmapFactory.decodeResource(context.resources, resId, opt) ?: return null
-                return cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
+                return if (fitMode) {
+                    roundBitmapAspectFit(original, Math.max(targetWidth, targetHeight), cornerRadius)
+                } else {
+                    cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
+                }
             }
 
             // 外部URLの場合: キャッシュファイルを確認
@@ -108,7 +114,11 @@ object WidgetImageHelper {
                 }
                 val original = BitmapFactory.decodeFile(file.absolutePath, opt)
                 if (original != null) {
-                    return cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
+                    return if (fitMode) {
+                        roundBitmapAspectFit(original, Math.max(targetWidth, targetHeight), cornerRadius)
+                    } else {
+                        cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
+                    }
                 }
             }
 
@@ -167,6 +177,32 @@ object WidgetImageHelper {
         } catch (t: Throwable) {
             Log.w(TAG, "Failed to download image: $urlStr", t)
         }
+    }
+
+    /**
+     * アスペクト比を維持して全景を角丸加工（写真の見切れ防止）
+     */
+    private fun roundBitmapAspectFit(source: Bitmap, maxDim: Int = 540, radius: Float = 14f): Bitmap {
+        val srcW = source.width
+        val srcH = source.height
+        val scale = Math.min(maxDim.toFloat() / srcW, maxDim.toFloat() / srcH)
+        val targetW = Math.max(1, (srcW * scale).toInt())
+        val targetH = Math.max(1, (srcH * scale).toInt())
+
+        val scaled = Bitmap.createScaledBitmap(source, targetW, targetH, true)
+        val output = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(output)
+        val paint = Paint().apply {
+            isAntiAlias = true
+            color = -0x1
+        }
+        val rectF = RectF(0f, 0f, targetW.toFloat(), targetH.toFloat())
+
+        canvas.drawRoundRect(rectF, radius, radius, paint)
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        canvas.drawBitmap(scaled, 0f, 0f, paint)
+
+        return output
     }
 
     /**

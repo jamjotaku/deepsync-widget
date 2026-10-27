@@ -65,15 +65,16 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
 
             // 1. テキスト・バッジ設定
             views.setTextViewText(R.id.widget_badge, "HUD // DEEPSYNC [$currentNum/$total]")
+            views.setTextViewText(R.id.widget_pomodoro, "CHRONO // 25:00 [FOCUS]")
             views.setTextViewText(R.id.widget_caption, slide.caption)
 
             // 2. 画像の安全なロード（キャッシュ/フェッチ）
             val bitmap = WidgetImageHelper.loadSlideBitmap(
                 context,
                 slide,
-                targetWidth = 140,
-                targetHeight = 140,
-                cornerRadius = 14f
+                targetWidth = 240,
+                targetHeight = 240,
+                cornerRadius = 12f
             ) {
                 // 非同期フェッチ完了時に再描画
                 try {
