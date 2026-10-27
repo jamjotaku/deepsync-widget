@@ -28,6 +28,7 @@ class DeepSyncPhotoWidgetProvider : AppWidgetProvider() {
                 Log.e("DeepSyncPhotoWidget", "updateWidget error", t)
             }
         }
+        WidgetAutoFlipper.scheduleNext(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -44,6 +45,7 @@ class DeepSyncPhotoWidgetProvider : AppWidgetProvider() {
                 for (id in appWidgetIds) {
                     updateWidget(context, appWidgetManager, id)
                 }
+                WidgetAutoFlipper.scheduleNext(context)
             }
         } catch (t: Throwable) {
             Log.e("DeepSyncPhotoWidget", "onReceive error", t)

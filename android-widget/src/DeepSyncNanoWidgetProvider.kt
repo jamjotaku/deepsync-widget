@@ -28,6 +28,7 @@ class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
                 Log.e("DeepSyncNanoWidget", "updateWidget error", t)
             }
         }
+        WidgetAutoFlipper.scheduleNext(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -44,6 +45,7 @@ class DeepSyncNanoWidgetProvider : AppWidgetProvider() {
                 for (id in appWidgetIds) {
                     updateWidget(context, appWidgetManager, id)
                 }
+                WidgetAutoFlipper.scheduleNext(context)
             }
         } catch (t: Throwable) {
             Log.e("DeepSyncNanoWidget", "onReceive error", t)

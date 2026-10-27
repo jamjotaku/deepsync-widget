@@ -62,6 +62,16 @@ export function SettingsDrawer({
   const [widgetSyncMsg, setWidgetSyncMsg] = useState<string | null>(null);
   const [isImportingToCloud, setIsImportingToCloud] = useState(false);
   const [cloudImportMsg, setCloudImportMsg] = useState<string | null>(null);
+  const [widgetInterval, setWidgetInterval] = useState<number>(20);
+
+  const handleSetWidgetInterval = (sec: number) => {
+    setWidgetInterval(sec);
+    if (typeof window !== 'undefined' && (window as any).DeepSyncWidgetBridge?.setSlideInterval) {
+      (window as any).DeepSyncWidgetBridge.setSlideInterval(sec);
+      setWidgetSyncMsg(`⏱️ ウィジェット自動更新を【${sec >= 60 ? `${sec / 60}分` : `${sec}秒`}】に設定しました`);
+      setTimeout(() => setWidgetSyncMsg(null), 3000);
+    }
+  };
 
   const handleSyncToWidget = () => {
     if (typeof window === 'undefined') return;
@@ -607,6 +617,27 @@ export function SettingsDrawer({
             >
               🔄 ホーム画面ウィジェットに同期する ({currentSlides.length > 0 ? `${currentSlides.length}枚` : '0枚'})
             </button>
+
+            {/* ウィジェット自動スライド切り替え間隔 */}
+            <div style={{ marginTop: '4px' }}>
+              <div style={{ fontSize: '9px', color: '#65859e', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                <span>⏱️ 自動スライド切り替え間隔</span>
+                <span style={{ color: '#00f2ff' }}>{widgetInterval >= 60 ? `${widgetInterval / 60}分` : `${widgetInterval}秒`}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {[10, 20, 30, 60, 300].map((sec) => (
+                  <button
+                    key={sec}
+                    className={`hud-btn ${widgetInterval === sec ? 'hud-btn-accent' : ''}`}
+                    style={{ flex: 1, padding: '3px 0', fontSize: '9px', justifyContent: 'center' }}
+                    onClick={() => handleSetWidgetInterval(sec)}
+                  >
+                    {sec >= 60 ? `${sec / 60}分` : `${sec}秒`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {widgetSyncMsg && (
               <div
                 style={{

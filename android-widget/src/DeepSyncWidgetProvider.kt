@@ -28,6 +28,8 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
                 Log.e("DeepSyncWidget", "updateWidget error", t)
             }
         }
+        // 自動スライドショーの開始
+        WidgetAutoFlipper.scheduleNext(context)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -44,6 +46,7 @@ class DeepSyncWidgetProvider : AppWidgetProvider() {
                 for (id in appWidgetIds) {
                     updateWidget(context, appWidgetManager, id)
                 }
+                WidgetAutoFlipper.scheduleNext(context)
             }
         } catch (t: Throwable) {
             Log.e("DeepSyncWidget", "onReceive error", t)

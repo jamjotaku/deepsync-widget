@@ -77,8 +77,18 @@ if (Test-Path $manifestFile) {
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_nano_info" />
         </receiver>
+
+        <receiver android:name=".WidgetAutoFlipper" android:exported="false">
+            <intent-filter>
+                <action android:name="com.deepsync.widget.ACTION_AUTO_FLIP" />
+            </intent-filter>
+        </receiver>
 "@
         $manifestContent = $manifestContent -replace '</application>', "$receivers`n    </application>"
+    }
+
+    if (-not ($manifestContent -match "android.permission.WAKE_LOCK")) {
+        $manifestContent = $manifestContent -replace '<application', "<uses-permission android:name=`"android.permission.WAKE_LOCK`" />`n    <application"
     }
 
     Set-Content -Path $manifestFile -Value $manifestContent

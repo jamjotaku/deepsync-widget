@@ -67,6 +67,7 @@ class WidgetBridge(private val context: Context) {
             // 4. 即座に全ウィジェットを直接再描画（テキストやカウンターを即時反映）
             Handler(Looper.getMainLooper()).post {
                 WidgetImageHelper.notifyAllWidgets(context)
+                WidgetAutoFlipper.scheduleNext(context)
             }
 
             true
@@ -74,5 +75,20 @@ class WidgetBridge(private val context: Context) {
             Log.e(TAG, "syncSlides failed", t)
             false
         }
+    }
+
+    /**
+     * スライド自動切り替え間隔（秒）の設定
+     */
+    @JavascriptInterface
+    fun setSlideInterval(seconds: Int): Boolean {
+        return try {
+            WidgetAutoFlipper.setIntervalSeconds(context, seconds)
+            true
+        } catch (t: Throwable) {
+            Log.e(TAG, "setSlideInterval failed", t)
+            false
+        }
+    }
     }
 }

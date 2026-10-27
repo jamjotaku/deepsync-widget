@@ -73,13 +73,19 @@ receivers = '''
             </intent-filter>
             <meta-data android:name=\"android.appwidget.provider\" android:resource=\"@xml/widget_nano_info\" />
         </receiver>
+
+        <receiver android:name=\".WidgetAutoFlipper\" android:exported=\"false\">
+            <intent-filter>
+                <action android:name=\"com.deepsync.widget.ACTION_AUTO_FLIP\" />
+            </intent-filter>
+        </receiver>
 '''
 
 if 'DeepSyncWidgetProvider' not in content:
     content = content.replace('</application>', receivers + '\n    </application>')
 
 if 'android.permission.INTERNET' not in content:
-    content = content.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\" />\n    <application')
+    content = content.replace('<application', '<uses-permission android:name=\"android.permission.INTERNET\" />\n    <uses-permission android:name=\"android.permission.WAKE_LOCK\" />\n    <application')
 
 with open('$MANIFEST_FILE', 'w') as f:
     f.write(content)

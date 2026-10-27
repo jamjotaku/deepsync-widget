@@ -74,15 +74,15 @@ object WidgetImageHelper {
 
     /**
      * スライドの Bitmap を安全に取得（Binder 1MB制限対策・キャッシュ・非同期フェッチ）
-     * fitMode=true の場合はアスペクト比を維持して全景表示（見切れ防止）
+     * useFaceCrop=true の場合は Android 標準 FaceDetector で顔を認識して顔中心にスマートクロップ
      */
     fun loadSlideBitmap(
         context: Context,
         slide: WidgetSlide,
         targetWidth: Int = 360,
         targetHeight: Int = 360,
-        cornerRadius: Float = 16f,
-        fitMode: Boolean = false,
+        cornerRadius: Float = 14f,
+        useFaceCrop: Boolean = true,
         onFetchComplete: () -> Unit
     ): Bitmap? {
         try {
@@ -93,8 +93,8 @@ object WidgetImageHelper {
                     inPreferredConfig = Bitmap.Config.RGB_565
                 }
                 val original = BitmapFactory.decodeResource(context.resources, resId, opt) ?: return null
-                return if (fitMode) {
-                    roundBitmapAspectFit(original, Math.max(targetWidth, targetHeight), cornerRadius)
+                return if (useFaceCrop) {
+                    WidgetFaceHelper.cropToFace(original, targetWidth, targetHeight, cornerRadius)
                 } else {
                     cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
                 }
@@ -114,8 +114,8 @@ object WidgetImageHelper {
                 }
                 val original = BitmapFactory.decodeFile(file.absolutePath, opt)
                 if (original != null) {
-                    return if (fitMode) {
-                        roundBitmapAspectFit(original, Math.max(targetWidth, targetHeight), cornerRadius)
+                    return if (useFaceCrop) {
+                        WidgetFaceHelper.cropToFace(original, targetWidth, targetHeight, cornerRadius)
                     } else {
                         cropAndRoundBitmap(original, targetWidth, targetHeight, cornerRadius)
                     }
